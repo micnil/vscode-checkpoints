@@ -17,6 +17,9 @@ export function activate(context: vscode.ExtensionContext) {
         return;
     }
     
+    // initial selection of slot context.
+    saveSlots.slotContext = activeEditor.document.fileName;
+
     vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;
         saveSlots.slotContext = activeEditor.document.fileName;

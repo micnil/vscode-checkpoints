@@ -75,10 +75,11 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
 
             // The id is used to maintain the selection and collapsible state of nodes
             // in the tree view. By default, the label is used to create an unique id,
-            // But since we want to modify the collapsed state on each update, we generate
-            // a new id for the node. To keep the dependencies of the extension to a minimum
-            // i'll just use this little random id generator. The entropy is not that important,
-            // worst case scenario is that the node doesn't collapse/expand when it is supposed to.
+            // But since we want to modify the collapsed state on each update (without 
+            // modifying the label), we generate a new id for the node. 
+            // To keep the dependencies of the extension to a minimum this little random 
+            // id generator is used. The entropy is not that important, worst case 
+            // scenario is that the node doesn't collapse/expand when it is supposed to.
             fileItem.id = String(Math.floor(Math.random() * 9e15));
 
             return fileItem;
