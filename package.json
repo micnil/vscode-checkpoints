@@ -16,10 +16,10 @@
     "main": "./out/extension",
     "contributes": {
         "views": {
-			"explorer": [
-				{
-					"id": "saveSlots",
-					"name": "Save Slots"
+            "explorer": [
+                {
+                    "id": "saveSlots",
+                    "name": "Save Slots"
                 }
             ]
         },
@@ -38,9 +38,9 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+        "typescript": "^2.7.1",
+        "vscode": "^1.1.10",
+        "@types/node": "^9.4.4",
+        "@types/mocha": "^2.2.48"
     }
 }
