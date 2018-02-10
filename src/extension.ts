@@ -10,18 +10,16 @@ import { SaveSlotsProvider } from './SaveSlotsProvider';
 export function activate(context: vscode.ExtensionContext) {
 
     let activeEditor = vscode.window.activeTextEditor;
-    let saveSlots: SaveSlots = new SaveSlots();
-    let saveSlotsProvider: SaveSlotsProvider = new SaveSlotsProvider(saveSlots);
+    let saveSlots: SaveSlots = new SaveSlots(context);
+    let saveSlotsProvider: SaveSlotsProvider = new SaveSlotsProvider(saveSlots, context);
     
     if(!activeEditor){
         return;
     }
     
-    saveSlots.setSlotContext(activeEditor.document.fileName);
-    
     vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;
-        saveSlots.setSlotContext(activeEditor.document.fileName);
+        saveSlots.slotContext = activeEditor.document.fileName;
     }, null, context.subscriptions);
     
     vscode.window.registerTreeDataProvider('saveSlots', saveSlotsProvider);

@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import { SaveSlots } from "./SaveSlots";
+import { Uri } from "vscode";
+import * as path from 'path';
 
 enum SaveSlotNodeType {
     File,
@@ -13,10 +15,10 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
 
     private saveStates: SaveSlotNode[] = [];
 
-    constructor (private saveSlots: SaveSlots) {
+    constructor (private saveSlots: SaveSlots, private context: vscode.ExtensionContext) {
 
         //register to the models events.
-        saveSlots.onDidChangeSlotContext( saveStates => {
+        saveSlots.onDidChangeSlotContext( filename => {
             this._onDidChangeTreeData.fire();
         });
 
@@ -33,11 +35,44 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
     getTreeItem(element: SaveSlotNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
         if(element.type === SaveSlotNodeType.File) {
-            return {
-                label: element.name,
-                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                contextValue: "file"
+
+            // element.name is the absolute file path on disk,
+            // we only want the path relative the workspace root we are in 
+
+            // First create an uri object of the file path
+            let fileUri = vscode.Uri.file(element.name);
+
+            // Get the workspace folder object that contains this file.
+            let workspaceFolder = vscode.workspace.getWorkspaceFolder(fileUri);
+
+            // Get the relative path from workspace root to the file. 
+            let relativeFilePath = path.relative(workspaceFolder.uri.fsPath, element.name);
+
+            // Add the folder name to the path aswell, so we know which workspace the file belongs to.
+            let label = path.join(workspaceFolder.name, relativeFilePath)
+
+            // Control the collapsed state of the file. We want it to expand when the file is selected
+            // and collapse when it is not selected.
+            let collapsibleState = this.saveSlots.slotContext === element.name ? 
+                vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed; 
+
+            // Create the tree item.
+            let fileItem = new vscode.TreeItem(label, collapsibleState);
+            fileItem.contextValue = "file";
+
+            // Let the current file be marked with an icon.
+            if (this.saveSlots.slotContext === element.name) {
+                fileItem.iconPath = {
+                    light: this.context.asAbsolutePath("resources/light/document-selected.svg"),
+                    dark: this.context.asAbsolutePath("resources/dark/document-selected.svg")
+                }
+            } else {
+                fileItem.iconPath = {
+                    light: this.context.asAbsolutePath("resources/light/document.svg"),
+                    dark: this.context.asAbsolutePath("resources/dark/document.svg")
+                };
             }
+            return fileItem;
         }
 
         return {
@@ -57,7 +92,7 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
 
         // If this is the root, get all files that have been saved
         if (!element) {
-            let savedFiles: string[] = this.saveSlots.getFiles();
+            let savedFiles: string[] = this.saveSlots.files;
             return savedFiles.map( file => {
                 return new SaveSlotNode(file, SaveSlotNodeType.File);
             })
