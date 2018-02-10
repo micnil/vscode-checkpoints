@@ -11,22 +11,83 @@
         "Other"
     ],
     "activationEvents": [
-        "onView:saveSlots"
+        "onView:saveSlotsExplorer"
     ],
     "main": "./out/extension",
     "contributes": {
         "views": {
             "explorer": [
                 {
-                    "id": "saveSlots",
+                    "id": "saveSlotsExplorer",
                     "name": "Save Slots"
                 }
             ]
         },
         "commands": [
             {
+                "command": "saveSlots.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            },
+            {
                 "command": "saveSlots.quickSave",
                 "title": "Quick Save"
+            },
+            {
+                "command": "saveSlots.clearFromFile",
+                "title": "Clear"
+            },
+            {
+                "command": "saveSlots.deleteSaveState",
+                "title": "Delete"
+            }
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "saveSlots.refresh",
+                    "when": "false"
+                },
+                {
+                    "command": "saveSlots.quickSave",
+                    "when": "false"
+                },
+                {
+                    "command": "saveSlots.clearFromFile",
+                    "when": "false"
+                },
+                {
+                    "command": "saveSlots.deleteSaveState",
+                    "when": "false"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "saveSlots.refresh",
+                    "when": "view == saveSlotsExplorer",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "saveSlots.clearFromFile",
+                    "when": "view == saveSlotsExplorer && viewItem == file"
+                },
+                {
+                    "command": "saveSlots.deleteSaveState",
+                    "when": "view == saveSlotsExplorer && viewItem == saveState"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "saveSlots.quickSave",
+                "key": "ctrl+alt+s",
+                "mac": "cmd+alt+s",
+                "when": "editorTextFocus"
             }
         ]
     },

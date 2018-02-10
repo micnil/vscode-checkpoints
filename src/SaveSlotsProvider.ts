@@ -27,6 +27,13 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
         })
     }
 
+    /** 
+     * Refresh the entire tree view.
+    */
+    public refresh(): void {
+        this._onDidChangeTreeData.fire();
+      }
+
     /**
      * Converts a save slot node to a tree view item. Will be called for each
      * node before render, and every time they are updated.

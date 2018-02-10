@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
     let saveSlots: SaveSlots = new SaveSlots(context);
     let saveSlotsProvider: SaveSlotsProvider = new SaveSlotsProvider(saveSlots, context);
     
-    if(!activeEditor){
+    if (!activeEditor) {
         return;
     }
     
@@ -25,12 +25,21 @@ export function activate(context: vscode.ExtensionContext) {
         saveSlots.slotContext = activeEditor.document.fileName;
     }, null, context.subscriptions);
     
-    vscode.window.registerTreeDataProvider('saveSlots', saveSlotsProvider);
+    vscode.window.registerTreeDataProvider('saveSlotsExplorer', saveSlotsProvider);
 
     // Register commands
     let disposableQuickSave = vscode.commands.registerCommand('saveSlots.quickSave', () => {
         saveSlots.add(activeEditor.document);
-        vscode.window.showInformationMessage('Quick save successfull.');
+    });
+
+    vscode.commands.registerCommand("saveSlots.refresh", node => {
+        saveSlotsProvider.refresh();
+    });
+
+    vscode.commands.registerCommand("saveSlots.deleteSaveState", saveSlotNode => {
+    });
+
+    vscode.commands.registerCommand("saveSlots.clearFromFile", saveSlotNode => {
     });
 
     let disposableLoadSlot = vscode.commands.registerCommand('saveSlots.loadSlot', () => {
