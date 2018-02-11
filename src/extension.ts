@@ -2,66 +2,66 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { SaveSlots } from './SaveSlots';
-import { SaveSlotsProvider } from './SaveSlotsProvider';
+import { CheckpointsModel } from './CheckpointsModel';
+import { CheckpointsProvider } from './CheckpointsProvider';
 
 // this method is called when the extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
     let activeEditor = vscode.window.activeTextEditor;
-    let saveSlots: SaveSlots = new SaveSlots(context);
-    let saveSlotsProvider: SaveSlotsProvider = new SaveSlotsProvider(saveSlots, context);
+    let checkpointsModel: CheckpointsModel = new CheckpointsModel(context);
+    let checkpointsProvider: CheckpointsProvider = new CheckpointsProvider(checkpointsModel, context);
     
     if (!activeEditor) {
         return;
     }
 
     // initial selection of slot context.
-    saveSlots.slotContext = activeEditor.document.fileName;
+    checkpointsModel.checkpointContext = activeEditor.document.fileName;
 
     vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;
-        saveSlots.slotContext = activeEditor.document.fileName;
+        checkpointsModel.checkpointContext = activeEditor.document.fileName;
     }, null, context.subscriptions);
     
-    vscode.window.registerTreeDataProvider('saveSlotsExplorer', saveSlotsProvider);
+    vscode.window.registerTreeDataProvider('checkpointsExplorer', checkpointsProvider);
 
     // Register commands
-    let disposableQuickSaveCommand = vscode.commands.registerCommand('saveSlots.quickSave', () => {
-        saveSlots.add(activeEditor.document);
+    let disposableAddCheckpointCommand = vscode.commands.registerCommand('checkpoints.addCheckpoint', () => {
+        checkpointsModel.add(activeEditor.document);
     });
 
-    let disposableRefreshCommand = vscode.commands.registerCommand("saveSlots.refresh", node => {
-        saveSlotsProvider.refresh();
+    let disposableRefreshCommand = vscode.commands.registerCommand("checkpoints.refresh", node => {
+        checkpointsProvider.refresh();
     });
 
-    let disposableDeleteSaveStateCommand = vscode.commands.registerCommand("saveSlots.deleteSaveState", saveSlotNode => {
-        saveSlots.remove(saveSlotNode.filePath, saveSlotNode.saveStateId);
+    let disposableDeleteCheckpointCommand = vscode.commands.registerCommand("checkpoints.deleteCheckpoint", checkpointNode => {
+        checkpointsModel.remove(checkpointNode.filePath, checkpointNode.checkpointId);
     });
 
-    let disposableClearFileCommand = vscode.commands.registerCommand("saveSlots.clearFromFile", saveSlotNode => {
-        saveSlots.remove(saveSlotNode.filePath);
+    let disposableClearFileCommand = vscode.commands.registerCommand("checkpoints.clearFromFile", checkpointNode => {
+        checkpointsModel.remove(checkpointNode.filePath);
     });
 
-    let disposableRestoreSaveStateCommand = vscode.commands.registerCommand('saveSlots.restoreSaveState', saveSlotNode => {
+    let disposableRestoreCheckpointCommand = vscode.commands.registerCommand('checkpoints.restoreCheckpoint', checkpointNode => {
         activeEditor.edit( editorBuilder => {
             
             // Create a range spanning the entire content of the file
             let lastLine = activeEditor.document.lineAt(activeEditor.document.lineCount - 1);
             let documentRange = new vscode.Range(new vscode.Position(0, 0), lastLine.rangeIncludingLineBreak.end);
 
-            // Replace the content with the textx of the save slot.
-            editorBuilder.replace(documentRange, saveSlots.getSaveState(saveSlotNode.filePath, saveSlotNode.saveStateId).text);
+            // Replace the content of the document with the text of the checkpoint.
+            editorBuilder.replace(documentRange, checkpointsModel.getCheckpoint(checkpointNode.filePath, checkpointNode.checkpointId).text);
         })
     });
     
     context.subscriptions.push(
-        disposableQuickSaveCommand,
+        disposableAddCheckpointCommand,
         disposableRefreshCommand,
-        disposableDeleteSaveStateCommand,
+        disposableDeleteCheckpointCommand,
         disposableClearFileCommand,
-        disposableRestoreSaveStateCommand
+        disposableRestoreCheckpointCommand
     );
 }
 

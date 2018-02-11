@@ -1,7 +1,7 @@
 {
-    "name": "code-save-slots",
-    "displayName": "Code Save Slots",
-    "description": "Save slots for your code editing.",
+    "name": "vscode-checkpoints",
+    "displayName": "Code Checkpoints",
+    "description": "Checkpoints for your code editing.",
     "version": "0.0.1",
     "publisher": "micnil",
     "engines": {
@@ -11,21 +11,21 @@
         "Other"
     ],
     "activationEvents": [
-        "onView:saveSlotsExplorer"
+        "onView:checkpointsExplorer"
     ],
     "main": "./out/extension",
     "contributes": {
         "views": {
             "explorer": [
                 {
-                    "id": "saveSlotsExplorer",
-                    "name": "Save Slots"
+                    "id": "checkpointsExplorer",
+                    "name": "Checkpoints"
                 }
             ]
         },
         "commands": [
             {
-                "command": "saveSlots.refresh",
+                "command": "checkpoints.refresh",
                 "title": "Refresh",
                 "icon": {
                     "light": "resources/light/refresh.svg",
@@ -33,70 +33,70 @@
                 }
             },
             {
-                "command": "saveSlots.quickSave",
-                "title": "Quick Save"
+                "command": "checkpoints.addCheckpoint",
+                "title": "Add Checkpoint"
             },
             {
-                "command": "saveSlots.clearFromFile",
+                "command": "checkpoints.clearFromFile",
                 "title": "Clear"
             },
             {
-                "command": "saveSlots.deleteSaveState",
+                "command": "checkpoints.deleteCheckpoint",
                 "title": "Delete"
             },
             {
-                "command": "saveSlots.restoreSaveState",
-                "title": "Restore"
+                "command": "checkpoints.restoreCheckpoint",
+                "title": "Restore Checkpoint"
             }
         ],
         "menus": {
             "commandPalette": [
                 {
-                    "command": "saveSlots.refresh",
+                    "command": "checkpoints.refresh",
                     "when": "false"
                 },
                 {
-                    "command": "saveSlots.quickSave",
+                    "command": "checkpoints.addCheckpoint",
                     "when": "false"
                 },
                 {
-                    "command": "saveSlots.clearFromFile",
+                    "command": "checkpoints.clearFromFile",
                     "when": "false"
                 },
                 {
-                    "command": "saveSlots.deleteSaveState",
+                    "command": "checkpoints.deleteCheckpoint",
                     "when": "false"
                 },
                 {
-                    "command": "saveSlots.restoreSaveState",
+                    "command": "checkpoints.restoreCheckpoint",
                     "when": "false"
                 }
             ],
             "view/title": [
                 {
-                    "command": "saveSlots.refresh",
-                    "when": "view == saveSlotsExplorer",
+                    "command": "checkpoints.refresh",
+                    "when": "view == checkpointsExplorer",
                     "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
-                    "command": "saveSlots.clearFromFile",
-                    "when": "view == saveSlotsExplorer && viewItem == file"
+                    "command": "checkpoints.clearFromFile",
+                    "when": "view == checkpointsExplorer && viewItem == file"
                 },
                 {
-                    "command": "saveSlots.deleteSaveState",
-                    "when": "view == saveSlotsExplorer && viewItem == saveState"
+                    "command": "checkpoints.deleteCheckpoint",
+                    "when": "view == checkpointsExplorer && viewItem == checkpoint"
                 },
                 {
-                    "command": "saveSlots.restoreSaveState",
-                    "when": "view == saveSlotsExplorer && viewItem == saveState"
+                    "command": "checkpoints.restoreCheckpoint",
+                    "when": "view == checkpointsExplorer && viewItem == checkpoint"
                 }
             ]
         },
         "keybindings": [
             {
-                "command": "saveSlots.quickSave",
+                "command": "checkpoints.addCheckpoint",
                 "key": "ctrl+alt+s",
                 "mac": "cmd+alt+s",
                 "when": "editorTextFocus"

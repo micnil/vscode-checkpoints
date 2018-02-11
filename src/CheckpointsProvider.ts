@@ -1,28 +1,28 @@
 'use strict';
 
 import * as vscode from "vscode";
-import { SaveSlots } from "./SaveSlots";
+import { CheckpointsModel } from "./CheckpointsModel";
 import { Uri } from "vscode";
 import * as path from 'path';
 
-export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> {
+export class CheckpointsProvider implements vscode.TreeDataProvider<CheckpointNode> {
 
-    private _onDidChangeTreeData: vscode.EventEmitter<SaveSlotNode | undefined> = new vscode.EventEmitter<SaveSlotNode | undefined>();
-    readonly onDidChangeTreeData: vscode.Event<SaveSlotNode | undefined> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: vscode.EventEmitter<CheckpointNode | undefined> = new vscode.EventEmitter<CheckpointNode | undefined>();
+    readonly onDidChangeTreeData: vscode.Event<CheckpointNode | undefined> = this._onDidChangeTreeData.event;
 
-    constructor (private saveSlots: SaveSlots, private context: vscode.ExtensionContext) {
+    constructor (private model: CheckpointsModel, private context: vscode.ExtensionContext) {
 
         // register to the models events.
         // TODO: Improve performance by only updating the affected file nodes.
-        saveSlots.onDidChangeSlotContext( filename => {
+        model.onDidChangeCheckpointContext( filename => {
             this._onDidChangeTreeData.fire();
         });
 
-        saveSlots.onDidAddSaveState( saveState => {
+        model.onDidAddCheckpoint( checkpoint => {
             this._onDidChangeTreeData.fire();
         })
 
-        saveSlots.onDidRemoveSaveState( saveStates => {
+        model.onDidRemoveCheckpoint( checkpoint => {
             this._onDidChangeTreeData.fire();
         })
     }
@@ -35,14 +35,14 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
     }
 
     /**
-     * Assigns the TreeItem specific fields in the save slot node elements. 
+     * Assigns the TreeItem specific fields in the checkpoint node elements. 
      * Will be called for each node before render, and every time they are updated.
      * @param element 
      */
-    getTreeItem(element: SaveSlotNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(element: CheckpointNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
         // File nodes
-        if(!element.saveStateId) {
+        if(!element.checkpointId) {
 
             // element.filePath is the absolute file path on disk,
             // we want the path relative the workspace root we are in as label
@@ -58,11 +58,11 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
 
             // Control the collapsed state of the file. We want it to expand when the file is selected
             // and collapse when it is not selected.
-            element.collapsibleState = this.saveSlots.slotContext === element.filePath ? 
+            element.collapsibleState = this.model.checkpointContext === element.filePath ? 
                 vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed; 
 
             // Set the file icon
-            if (this.saveSlots.slotContext === element.filePath) {
+            if (this.model.checkpointContext === element.filePath) {
                 element.iconPath = {
                     light: this.context.asAbsolutePath("resources/light/document-selected.svg"),
                     dark: this.context.asAbsolutePath("resources/dark/document-selected.svg")
@@ -87,10 +87,10 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
             return element;
         }
             
-        // Save state nodes
+        // checkpoint nodes
         element.collapsibleState = vscode.TreeItemCollapsibleState.None;
-        element.contextValue = "saveState";
-        element.label = this.saveSlots.getSaveState(element.filePath, element.saveStateId).name;
+        element.contextValue = "checkpoint";
+        element.label = this.model.getCheckpoint(element.filePath, element.checkpointId).name;
         return element;
     }
 
@@ -100,34 +100,34 @@ export class SaveSlotsProvider implements vscode.TreeDataProvider<SaveSlotNode> 
      * the top level nodes.
      * @param element The element to get the children from.
      */
-    getChildren(element?: SaveSlotNode): vscode.ProviderResult<SaveSlotNode[]> {
+    getChildren(element?: CheckpointNode): vscode.ProviderResult<CheckpointNode[]> {
 
         // If this is the root, get all files that have been saved
         if (!element) {
-            let savedFiles: string[] = this.saveSlots.files;
+            let savedFiles: string[] = this.model.files;
             return savedFiles.map( file => {
-                return new SaveSlotNode(file);
+                return new CheckpointNode(file);
             })
         }
 
-        // This element must be a file, get all save states for the file.
-        if (!element.saveStateId) {
-            let saveStates = this.saveSlots.getSaveStates(element.filePath);
-            return saveStates.map( saveState => {
-                return new SaveSlotNode(element.filePath, saveState.id);
+        // This element must be a file, get all checkpoints for the file.
+        if (!element.checkpointId) {
+            let checkpoints = this.model.getCheckpoints(element.filePath);
+            return checkpoints.map( checkpoint => {
+                return new CheckpointNode(element.filePath, checkpoint.id);
             });
         }
         
-        // if this element is a save state, it has no children
+        // if this element is a checkpoint, it has no children
         return [];
     }
 }
 
 /** 
  * One node in the tree view. Can either represent a file (collapsible root)
- * or a save state.
+ * or a checkpoint.
 */
-class SaveSlotNode extends vscode.TreeItem {
+class CheckpointNode extends vscode.TreeItem {
 
     // TreeItem fields:
     label: string;
@@ -139,17 +139,17 @@ class SaveSlotNode extends vscode.TreeItem {
 
     // Custom fields:
     filePath: string;
-    saveStateId?: string;
+    checkpointId?: string;
 
     constructor(
         filePath: string,
-        saveStateId?: string
+        checkpointId?: string
     ) {
         // Will assign TreeItem fields later.
         super("");
 
         this.filePath = filePath;
-        this.saveStateId = saveStateId;
+        this.checkpointId = checkpointId;
     }
 
 }
