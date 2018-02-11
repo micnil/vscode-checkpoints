@@ -37,9 +37,11 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     vscode.commands.registerCommand("saveSlots.deleteSaveState", saveSlotNode => {
+        saveSlots.remove(saveSlotNode.filePath, saveSlotNode.saveStateId);
     });
 
     vscode.commands.registerCommand("saveSlots.clearFromFile", saveSlotNode => {
+        saveSlots.remove(saveSlotNode.filePath);
     });
 
     let disposableLoadSlot = vscode.commands.registerCommand('saveSlots.loadSlot', () => {
