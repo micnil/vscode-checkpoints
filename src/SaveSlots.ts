@@ -1,3 +1,5 @@
+'use strict';
+
 import { TextDocument, EventEmitter, Event, ExtensionContext } from 'vscode';
 import * as path from 'path';
 

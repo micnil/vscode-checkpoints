@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { SaveSlots } from './SaveSlots';
 import { SaveSlotsProvider } from './SaveSlotsProvider';
 
-// this method is called when your extension is activated
+// this method is called when the extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (!activeEditor) {
         return;
     }
-    
+
     // initial selection of slot context.
     saveSlots.slotContext = activeEditor.document.fileName;
 
@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let disposableRestoreSaveStateCommand = vscode.commands.registerCommand('saveSlots.restoreSaveState', saveSlotNode => {
         activeEditor.edit( editorBuilder => {
-
+            
             // Create a range spanning the entire content of the file
             let lastLine = activeEditor.document.lineAt(activeEditor.document.lineCount - 1);
             let documentRange = new vscode.Range(new vscode.Position(0, 0), lastLine.rangeIncludingLineBreak.end);
