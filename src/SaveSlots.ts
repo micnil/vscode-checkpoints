@@ -97,7 +97,7 @@ export class SaveSlots {
 
 		if(removedSaveStates) {
 			this.onDidRemoveSaveStateEmitter.fire(removedSaveStates);
-		}		
+		}
 	}
 
 	/**

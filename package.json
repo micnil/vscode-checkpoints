@@ -43,6 +43,10 @@
             {
                 "command": "saveSlots.deleteSaveState",
                 "title": "Delete"
+            },
+            {
+                "command": "saveSlots.restoreSaveState",
+                "title": "Restore"
             }
         ],
         "menus": {
@@ -62,6 +66,10 @@
                 {
                     "command": "saveSlots.deleteSaveState",
                     "when": "false"
+                },
+                {
+                    "command": "saveSlots.restoreSaveState",
+                    "when": "false"
                 }
             ],
             "view/title": [
@@ -78,6 +86,10 @@
                 },
                 {
                     "command": "saveSlots.deleteSaveState",
+                    "when": "view == saveSlotsExplorer && viewItem == saveState"
+                },
+                {
+                    "command": "saveSlots.restoreSaveState",
                     "when": "view == saveSlotsExplorer && viewItem == saveState"
                 }
             ]

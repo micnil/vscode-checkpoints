@@ -28,27 +28,33 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider('saveSlotsExplorer', saveSlotsProvider);
 
     // Register commands
-    let disposableQuickSave = vscode.commands.registerCommand('saveSlots.quickSave', () => {
+    let disposableQuickSaveCommand = vscode.commands.registerCommand('saveSlots.quickSave', () => {
         saveSlots.add(activeEditor.document);
     });
 
-    vscode.commands.registerCommand("saveSlots.refresh", node => {
+    let disposableRefreshCommand = vscode.commands.registerCommand("saveSlots.refresh", node => {
         saveSlotsProvider.refresh();
     });
 
-    vscode.commands.registerCommand("saveSlots.deleteSaveState", saveSlotNode => {
+    let disposableDeleteSaveStateCommand = vscode.commands.registerCommand("saveSlots.deleteSaveState", saveSlotNode => {
         saveSlots.remove(saveSlotNode.filePath, saveSlotNode.saveStateId);
     });
 
-    vscode.commands.registerCommand("saveSlots.clearFromFile", saveSlotNode => {
+    let disposableClearFileCommand = vscode.commands.registerCommand("saveSlots.clearFromFile", saveSlotNode => {
         saveSlots.remove(saveSlotNode.filePath);
     });
 
-    let disposableLoadSlot = vscode.commands.registerCommand('saveSlots.loadSlot', () => {
+    let disposableRestoreSaveStateCommand = vscode.commands.registerCommand('saveSlots.restoreSaveState', saveSlotNode => {
         vscode.window.showInformationMessage('Load file successfull.');
     });
     
-    context.subscriptions.push(disposableQuickSave, disposableLoadSlot);
+    context.subscriptions.push(
+        disposableQuickSaveCommand,
+        disposableRefreshCommand,
+        disposableDeleteSaveStateCommand,
+        disposableClearFileCommand,
+        disposableRestoreSaveStateCommand
+    );
 }
 
 // this method is called when your extension is deactivated
