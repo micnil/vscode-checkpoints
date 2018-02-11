@@ -163,7 +163,15 @@ export class CheckpointsModel {
 			return;
 		}
 
-		return checkpoints.splice(checkpointIndex, 1);
+		// Remove the checkpoint.
+		let removedCheckpoints = checkpoints.splice(checkpointIndex, 1);
+		
+		// If the the store is now empty for this file, remove the key aswell.
+		if(checkpoints.length === 0) {
+			this.checkpointStore.delete(fileName);
+		}
+
+		return removedCheckpoints
 	}
 
 	/**
