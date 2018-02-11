@@ -45,7 +45,15 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     let disposableRestoreSaveStateCommand = vscode.commands.registerCommand('saveSlots.restoreSaveState', saveSlotNode => {
-        vscode.window.showInformationMessage('Load file successfull.');
+        activeEditor.edit( editorBuilder => {
+
+            // Create a range spanning the entire content of the file
+            let lastLine = activeEditor.document.lineAt(activeEditor.document.lineCount - 1);
+            let documentRange = new vscode.Range(new vscode.Position(0, 0), lastLine.rangeIncludingLineBreak.end);
+
+            // Replace the content with the textx of the save slot.
+            editorBuilder.replace(documentRange, saveSlots.getSaveState(saveSlotNode.filePath, saveSlotNode.saveStateId).text);
+        })
     });
     
     context.subscriptions.push(

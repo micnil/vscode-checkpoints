@@ -198,15 +198,16 @@ class SaveState {
 	 */
 	private readonly parent: string;
 
-	/**
-	 * The text content of the file
-	 */
-	private readonly text: string;
-
+	
 	/**
 	 * The file version
 	 */
 	private readonly timeStamp: number;
+	
+	/**
+	 * The text content of the file
+	 */
+	public readonly text: string;
 
 	constructor(parent: string, text: string) {
 		this.parent = parent;
