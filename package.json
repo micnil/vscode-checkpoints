@@ -10,6 +10,17 @@
     "categories": [
         "Other"
     ],
+    "keywords": [
+        "checkpoint",
+        "checkpoints",
+        "code checkpoints",
+        "stash",
+        "file stash",
+        "save slots",
+        "shelf",
+        "shelve",
+        "multi-root ready"
+    ],
     "activationEvents": [
         "onView:checkpointsExplorer"
     ],

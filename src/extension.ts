@@ -45,6 +45,14 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     let disposableRestoreCheckpointCommand = vscode.commands.registerCommand('checkpoints.restoreCheckpoint', checkpointNode => {
+        console.log(`Restoring checkpoint: '${checkpointNode.name}', from file: '${checkpointNode.parent}'`)
+
+        // Currently, you can only restore checkpoints if it comes from the currently active document. 
+        if (checkpointNode.parent !== checkpointsModel.checkpointContext) {
+            console.error(`Failed to restore checkpoint to file '${checkpointsModel.checkpointContext}'.`)
+            return;
+        }
+
         activeEditor.edit( editorBuilder => {
             
             // Create a range spanning the entire content of the file
