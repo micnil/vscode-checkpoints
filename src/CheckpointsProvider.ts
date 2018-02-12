@@ -85,6 +85,12 @@ export class CheckpointsProvider implements vscode.TreeDataProvider<CheckpointNo
 
             element.contextValue = "file";
 
+            element.command = {
+                command: "checkpoints.openFile",
+                arguments: [element],
+                title: "Open File",
+            };
+
             // The id of tree items is used to maintain the selection and collapsible state 
             // of nodes in the tree view. By default, the label is used to create an unique id,
             // But since we want to modify the collapsed state on each update (without 

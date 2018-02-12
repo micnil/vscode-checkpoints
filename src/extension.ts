@@ -45,10 +45,10 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     let disposableRestoreCheckpointCommand = vscode.commands.registerCommand('checkpoints.restoreCheckpoint', checkpointNode => {
-        console.log(`Restoring checkpoint: '${checkpointNode.name}', from file: '${checkpointNode.parent}'`)
+        console.log(`Restoring checkpoint: '${checkpointNode.checkpointId}', from file: '${checkpointNode.parent}'`);
 
         // Currently, you can only restore checkpoints if it comes from the currently active document. 
-        if (checkpointNode.parent !== checkpointsModel.checkpointContext) {
+        if (checkpointNode.filePath !== checkpointsModel.checkpointContext) {
             console.error(`Failed to restore checkpoint to file '${checkpointsModel.checkpointContext}'.`)
             return;
         }
@@ -63,13 +63,35 @@ export function activate(context: vscode.ExtensionContext) {
             editorBuilder.replace(documentRange, checkpointsModel.getCheckpoint(checkpointNode.filePath, checkpointNode.checkpointId).text);
         })
     });
+
+    let disposableOpenFileCommand = vscode.commands.registerCommand("checkpoints.openFile", checkpointNode => {
+        console.log(`Opening file: '${checkpointNode.filePath}'`);
+
+        vscode.workspace.openTextDocument(checkpointNode.filePath)
+            .then( 
+                // On success:
+                textDocument => {
+                    vscode.window.showTextDocument(textDocument, {
+                            preserveFocus: false,
+                            preview: true,
+                        }
+                    );
+                }, 
+                // on failure:
+                error => {
+                    vscode.window.showErrorMessage(`Cannot open file ${checkpointNode.filePath}.`);
+                    console.error(error.message);
+                }
+            )
+    });
     
     context.subscriptions.push(
         disposableAddCheckpointCommand,
         disposableRefreshCommand,
         disposableDeleteCheckpointCommand,
         disposableClearFileCommand,
-        disposableRestoreCheckpointCommand
+        disposableRestoreCheckpointCommand,
+        disposableOpenFileCommand
     );
 }
 
