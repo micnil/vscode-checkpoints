@@ -10,6 +10,8 @@ export class CheckpointsProvider implements vscode.TreeDataProvider<CheckpointNo
     private _onDidChangeTreeData: vscode.EventEmitter<CheckpointNode | undefined> = new vscode.EventEmitter<CheckpointNode | undefined>();
     readonly onDidChangeTreeData: vscode.Event<CheckpointNode | undefined> = this._onDidChangeTreeData.event;
 
+    private readonly maxLengthLabel = 35;
+
     constructor (private model: CheckpointsModel, private context: vscode.ExtensionContext) {
 
         // register to the models events.
@@ -55,6 +57,13 @@ export class CheckpointsProvider implements vscode.TreeDataProvider<CheckpointNo
             let relativeFilePath = path.relative(workspaceFolder.uri.fsPath, element.filePath);
             // Add the folder name to the path aswell, so we know which workspace the file belongs to.
             element.label = path.join(workspaceFolder.name, relativeFilePath);
+            // Truncate the label if it is too long
+            if (element.label.length > this.maxLengthLabel) {
+                element.label = '...' + element.label.substr(
+                    element.label.length - this.maxLengthLabel, 
+                    element.label.length - 1
+                );
+            }
 
             // Control the collapsed state of the file. We want it to expand when the file is selected
             // and collapse when it is not selected.
