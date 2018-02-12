@@ -1,6 +1,6 @@
 'use strict';
 
-import { TextDocument, EventEmitter, Event, ExtensionContext } from 'vscode';
+import { TextDocument, EventEmitter, Event, ExtensionContext, workspace, window } from 'vscode';
 import * as path from 'path';
 
 /**
@@ -25,15 +25,16 @@ export class CheckpointsModel {
 	}
 
 	// Fields
-	private checkpointStore: Map<string, Array<Checkpoint>>;
+	private checkpointStore: Map<string, Checkpoint[]>;
     private currentCheckpointContext: string;
-    private context: ExtensionContext;
+	private context: ExtensionContext;
 
 	constructor(context: ExtensionContext) {
-		// Initialize the checkpoints map.
-        this.checkpointStore = new Map<string, Array<Checkpoint>>();
-        
-        this.context = context;
+		this.context = context;
+
+		// Initialize the checkpoints map from workspace state or empty.
+		let workspaceState = this.context.workspaceState.get("checkpointsStore", {});
+		this.checkpointStore =  this.deserialize(workspaceState);
 	}
 
 	/**
@@ -77,11 +78,11 @@ export class CheckpointsModel {
 			this.checkpointStore.set(document.fileName, []);
 		}
 
-		// Add the checkoint
+		// Add the checkpoint
 		this.checkpointStore.get(document.fileName).push(checkpoint);
-
-		// trigger the event
 		this.onDidAddCheckpointEmitter.fire(checkpoint);
+
+		this.updateWorkspaceState(this.checkpointStore);
 	}
 
 	/**
@@ -99,6 +100,7 @@ export class CheckpointsModel {
 
 		if(removedCheckpoints) {
 			this.onDidRemoveCheckpointEmitter.fire(removedCheckpoints);
+			this.updateWorkspaceState(this.checkpointStore);
 		}
 	}
 
@@ -106,7 +108,7 @@ export class CheckpointsModel {
 	 * Gets all checkpoints for a specific file.
 	 * @param fileName the file to get the checkpoint context from
 	 */
-	getCheckpoints(fileName?: string): Array<Checkpoint> {
+	getCheckpoints(fileName?: string): Checkpoint[] {
 		if (!fileName) {
 			fileName = this.currentCheckpointContext;
 		}
@@ -197,6 +199,59 @@ export class CheckpointsModel {
 		// delete unsuccessfull
 		return null;
 	}
+
+	/**
+	 * Serialize the checkpoint store to a simple object.
+	 * @param checkpointStore The checkpoint store
+	 */
+	private serialize(checkpointStore: Map<string, Checkpoint[]>): any {
+
+		let stringifyableStore = {};
+
+		for (let [file, checkpoints] of checkpointStore) {
+			stringifyableStore[file] = checkpoints.map(checkpoint => checkpoint.serialize());
+		}
+
+		return stringifyableStore;
+	}
+
+	/**
+	 * Deserialized an object representation of the checkpoint store. 
+	 * @param obj The object
+	 */
+	private deserialize(obj: any): Map<string, Checkpoint[]> {
+		let checkpointStore = new Map<string, Checkpoint[]>();
+
+		for(let key in obj) {
+
+			// If this is not true, junk has gotten into the workspace state.
+			if (!Array.isArray(obj[key])) {
+				console.error(`Failed to deserilize key '${key}'. Invalid format`);
+				continue
+			};
+
+			let checkpoints: Checkpoint[] = obj[key].map(serializedCheckpoint => Checkpoint.deserialize(serializedCheckpoint)); 
+			checkpointStore.set(key, checkpoints);
+		}
+		return checkpointStore;
+	}
+
+	/**
+	 * Serializes and updates the workspace state with the checkpoint store. 
+	 * @param checkpointStore the checkpoint store
+	 */
+	private updateWorkspaceState(checkpointStore: Map<string, Checkpoint[]>) {
+		this.context.workspaceState.update("checkpointsStore", this.serialize(this.checkpointStore))
+			.then( success => {
+				
+				if(!success){
+					console.error("The checkpoint failed to save to storage. Will not persist the session!")
+					window.showWarningMessage("Failed to save the checkpoint store to workspace storage.");
+					return;
+				}
+			}
+		);
+	}
 }
 
 /**
@@ -225,11 +280,42 @@ class Checkpoint {
 		this.timeStamp = Date.now();
 	}
 
+	/**
+	 * The pretty name of the checkpoint.
+	 */
 	get name(): string {
 		return new Date(this.timeStamp).toLocaleString();
 	}
 
+	/**
+	 * the id of the checkpoint (string timestamp)
+	 */
 	get id(): string {
 		return this.timeStamp.toString();
+	}
+
+	/** 
+	 * Serializes the checkpoint into a simple object.
+	*/
+	public serialize(): any {
+		return {
+			parent: this.parent,
+			timeStamp: this.timeStamp,
+			text: this.text
+		}
+	}
+
+	/**
+	 * Static constructor that takes a simple object representation of a checkpoint
+	 * @param obj The checkpoint object.
+	 */
+	public static deserialize(obj: any) : Checkpoint {
+
+		if(!obj.parent || !obj.text || !obj.timeStamp){
+			console.error(`Failed to deserilize checkpoint, invalid format:\n${JSON.stringify(obj, null, 2)}`);
+			return;
+		}
+
+		return Object.assign(new Checkpoint(obj.parent, obj.text), {timestamp: obj.timestamp});
 	}
 }

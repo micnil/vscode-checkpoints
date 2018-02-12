@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (!activeEditor) {
         return;
     }
-
+    
     // initial selection of slot context.
     checkpointsModel.checkpointContext = activeEditor.document.fileName;
 
