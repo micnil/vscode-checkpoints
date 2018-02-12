@@ -48,8 +48,16 @@
                 "title": "Add Checkpoint"
             },
             {
-                "command": "checkpoints.clearFromFile",
+                "command": "checkpoints.clearFile",
                 "title": "Clear"
+            },
+            {
+                "command": "checkpoints.clearAll",
+                "title": "Clear All",
+                "icon": {
+                    "light": "resources/light/delete.svg",
+                    "dark": "resources/dark/delete.svg"
+                }
             },
             {
                 "command": "checkpoints.deleteCheckpoint",
@@ -71,7 +79,11 @@
                     "when": "false"
                 },
                 {
-                    "command": "checkpoints.clearFromFile",
+                    "command": "checkpoints.clearFile",
+                    "when": "false"
+                },
+                {
+                    "command": "checkpoints.clearAll",
                     "when": "false"
                 },
                 {
@@ -88,11 +100,16 @@
                     "command": "checkpoints.refresh",
                     "when": "view == checkpointsExplorer",
                     "group": "navigation"
+                },
+                {
+                    "command": "checkpoints.clearAll",
+                    "when": "view == checkpointsExplorer",
+                    "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
-                    "command": "checkpoints.clearFromFile",
+                    "command": "checkpoints.clearFile",
                     "when": "view == checkpointsExplorer && viewItem == file"
                 },
                 {

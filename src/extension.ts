@@ -40,8 +40,12 @@ export function activate(context: vscode.ExtensionContext) {
         checkpointsModel.remove(checkpointNode.filePath, checkpointNode.checkpointId);
     });
 
-    let disposableClearFileCommand = vscode.commands.registerCommand("checkpoints.clearFromFile", checkpointNode => {
+    let disposableClearFileCommand = vscode.commands.registerCommand("checkpoints.clearFile", checkpointNode => {
         checkpointsModel.remove(checkpointNode.filePath);
+    });
+
+    let disposableClearAllCommand = vscode.commands.registerCommand("checkpoints.clearAll", node => {
+        checkpointsModel.clearAll();
     });
 
     let disposableRestoreCheckpointCommand = vscode.commands.registerCommand('checkpoints.restoreCheckpoint', checkpointNode => {
@@ -90,6 +94,7 @@ export function activate(context: vscode.ExtensionContext) {
         disposableRefreshCommand,
         disposableDeleteCheckpointCommand,
         disposableClearFileCommand,
+        disposableClearAllCommand,
         disposableRestoreCheckpointCommand,
         disposableOpenFileCommand
     );

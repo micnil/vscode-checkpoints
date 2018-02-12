@@ -93,7 +93,7 @@ export class CheckpointsModel {
 	remove(file: string, id?: string): void {
 		let removedCheckpoints;
 		if (!id) {
-			removedCheckpoints = this.clearFromFile(file);
+			removedCheckpoints = this.clearFile(file);
 		} else {
 			removedCheckpoints = this.deleteCheckpoint(file, id);
 		}
@@ -102,6 +102,15 @@ export class CheckpointsModel {
 			this.onDidRemoveCheckpointEmitter.fire(removedCheckpoints);
 			this.updateWorkspaceState(this.checkpointStore);
 		}
+	}
+
+	/** 
+	 * Clears the entire checkpoint store, and updates the workspace state.
+	*/
+	clearAll(): void {
+		this.checkpointStore = new Map<string,Checkpoint[]>();
+		this.onDidRemoveCheckpointEmitter.fire();
+		this.updateWorkspaceState(this.checkpointStore);
 	}
 
 	/**
@@ -180,7 +189,7 @@ export class CheckpointsModel {
 	 * 	
 	 * @param file The file name (absolute path)
 	 */
-	private clearFromFile(file: string) : Checkpoint[] {
+	private clearFile(file: string) : Checkpoint[] {
 		console.log(`clearing checkpoints from file: '${file}'`);
 
 		if(!this.checkpointStore.has(file)){
@@ -245,8 +254,8 @@ export class CheckpointsModel {
 			.then( success => {
 				
 				if(!success){
-					console.error("The checkpoint failed to save to storage. Will not persist the session!")
-					window.showWarningMessage("Failed to save the checkpoint store to workspace storage.");
+					console.error("Failed to update storage. Will not persist the session!")
+					window.showWarningMessage("Failed to update the checkpoint store to workspace storage.");
 					return;
 				}
 			}
