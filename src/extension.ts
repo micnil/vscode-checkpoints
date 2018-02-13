@@ -37,15 +37,21 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     let disposableDeleteCheckpointCommand = vscode.commands.registerCommand("checkpoints.deleteCheckpoint", checkpointNode => {
-        checkpointsModel.remove(checkpointNode.filePath, checkpointNode.checkpointId);
+        promptAreYouSure(`Are you sure you want to delete checkpoint '${checkpointNode.label}'?`, () => {
+            checkpointsModel.remove(checkpointNode.filePath, checkpointNode.checkpointId);
+        });
     });
 
     let disposableClearFileCommand = vscode.commands.registerCommand("checkpoints.clearFile", checkpointNode => {
-        checkpointsModel.remove(checkpointNode.filePath);
+        promptAreYouSure(`Are you sure you want to clear all checkpoints from file '${checkpointNode.filePath}'?`, () => {
+            checkpointsModel.remove(checkpointNode.filePath);
+        });
     });
 
     let disposableClearAllCommand = vscode.commands.registerCommand("checkpoints.clearAll", node => {
-        checkpointsModel.clearAll();
+        promptAreYouSure(`Are you sure you want to clear ALL checkpoints?`, () => {
+            checkpointsModel.clearAll();
+        });
     });
 
     let disposableRestoreCheckpointCommand = vscode.commands.registerCommand('checkpoints.restoreCheckpoint', checkpointNode => {
@@ -112,7 +118,6 @@ export function activate(context: vscode.ExtensionContext) {
 
                 checkpointsModel.renameCheckpoint(checkpointNode.filePath, checkpointNode.checkpointId, result);
             })
-
     });
     
     context.subscriptions.push(
@@ -129,4 +134,20 @@ export function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
+}
+
+/**
+ * Prompt the user with a modal before performing an action
+ * @param message Message to ask the user (yes/no question)
+ * @param cb Callback that will be called if answer is yes
+ */
+function promptAreYouSure(message: string, cb,) {
+    vscode.window.showWarningMessage<vscode.MessageItem>(message, { modal: true }, 
+        { title: 'Yes', isCloseAffordance: false },
+        { title: 'No', isCloseAffordance: true })
+        .then( answer => {
+            if(answer.title === "Yes") {
+                cb();
+            }
+        })
 }
