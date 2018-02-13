@@ -69,6 +69,13 @@ export class CheckpointsModel {
 	 * @param document The document to save
 	 */
 	add(document: TextDocument): void {
+		console.log(`Adding file '${document.fileName}' to checkpoint store.`);
+
+		if (document.isUntitled) {
+			console.log(`Failed to add file to store. Unsaved documents are currently not supported`);
+			window.showWarningMessage(`Add checkpoint failed. Untitled documents are currently not supported`);
+			return;
+		}
 
 		// create the checkpoint
 		let checkpoint = new Checkpoint(document.fileName, document.getText());
