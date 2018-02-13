@@ -19,9 +19,11 @@
         "save slots",
         "shelf",
         "shelve",
+        "file backup",
         "multi-root ready"
     ],
     "activationEvents": [
+        "onCommand:checkpoints.addCheckpoint",
         "onView:checkpointsExplorer"
     ],
     "main": "./out/extension",
