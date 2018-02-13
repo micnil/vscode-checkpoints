@@ -27,6 +27,10 @@ export class CheckpointsProvider implements vscode.TreeDataProvider<CheckpointNo
         model.onDidRemoveCheckpoint( checkpoint => {
             this._onDidChangeTreeData.fire();
         })
+
+        model.onDidUpdateCheckpoint( checkpoint => {
+            this._onDidChangeTreeData.fire();
+        })
     }
 
     /** 

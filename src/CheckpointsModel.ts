@@ -24,6 +24,11 @@ export class CheckpointsModel {
 		return this.onDidChangeCheckpointContextEmitter.event;
 	}
 
+	private onDidUpdateCheckpointEmitter = new EventEmitter<Checkpoint>();
+	get onDidUpdateCheckpoint(): Event<Checkpoint> {
+		return this.onDidUpdateCheckpointEmitter.event;
+	}
+
 	// Fields
 	private checkpointStore: Map<string, Checkpoint[]>;
     private currentCheckpointContext: string;
@@ -159,6 +164,20 @@ export class CheckpointsModel {
 	}
 
 	/**
+	 * Rename a specific checkpoint to a new name.
+	 * @param fileName Absolute path to the file
+	 * @param id The id of the checkpoint
+	 * @param newName The name to set
+	 */
+	renameCheckpoint(fileName: string, id: string, newName: string): void {
+		console.log(`Renaming checkpoint with file name '${fileName}' and id: '${id}' to ${newName}`)
+		let checkpoint: Checkpoint = this.getCheckpoint(fileName, id);
+
+		checkpoint.name = newName;
+		this.onDidUpdateCheckpointEmitter.fire(checkpoint);
+	}
+
+	/**
 	 * Deletes a checkpoint from the model.
 	 * @param file The file name (absolute path)
 	 * @param id The id of the checkpoint
@@ -284,6 +303,11 @@ class Checkpoint {
 	 * The file version
 	 */
 	private readonly timeStamp: number;
+
+	/**
+	 * The checkpoint name
+	 */
+	public name: string;
 	
 	/**
 	 * The text content of the file
@@ -294,13 +318,7 @@ class Checkpoint {
 		this.parent = parent;
 		this.text = text;
 		this.timeStamp = Date.now();
-	}
-
-	/**
-	 * The pretty name of the checkpoint.
-	 */
-	get name(): string {
-		return new Date(this.timeStamp).toLocaleString();
+		this.name = new Date(this.timeStamp).toLocaleString();
 	}
 
 	/**
@@ -317,7 +335,8 @@ class Checkpoint {
 		return {
 			parent: this.parent,
 			timeStamp: this.timeStamp,
-			text: this.text
+			text: this.text,
+			name: this.name,
 		}
 	}
 
@@ -327,11 +346,14 @@ class Checkpoint {
 	 */
 	public static deserialize(obj: any) : Checkpoint {
 
-		if(!obj.parent || !obj.text || !obj.timeStamp){
+		if(!obj.parent || !obj.text || !obj.timeStamp || !obj.name){
 			console.error(`Failed to deserilize checkpoint, invalid format:\n${JSON.stringify(obj, null, 2)}`);
 			return;
 		}
 
-		return Object.assign(new Checkpoint(obj.parent, obj.text), {timestamp: obj.timestamp});
+		return Object.assign(
+			new Checkpoint(obj.parent, obj.text), 
+			{timestamp: obj.timestamp, name: obj.name}
+		);
 	}
 }

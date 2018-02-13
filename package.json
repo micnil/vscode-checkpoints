@@ -68,6 +68,10 @@
             {
                 "command": "checkpoints.restoreCheckpoint",
                 "title": "Restore Checkpoint"
+            },
+            {
+                "command": "checkpoints.renameCheckpoint",
+                "title": "Rename Checkpoint"
             }
         ],
         "menus": {
@@ -95,7 +99,11 @@
                 {
                     "command": "checkpoints.restoreCheckpoint",
                     "when": "false"
-                }
+                },
+                {
+                "command": "checkpoints.renameCheckpoint",
+                "when": "false"
+            }
             ],
             "view/title": [
                 {
@@ -120,6 +128,10 @@
                 },
                 {
                     "command": "checkpoints.restoreCheckpoint",
+                    "when": "view == checkpointsExplorer && viewItem == checkpoint"
+                },
+                {
+                    "command": "checkpoints.renameCheckpoint",
                     "when": "view == checkpointsExplorer && viewItem == checkpoint"
                 }
             ]

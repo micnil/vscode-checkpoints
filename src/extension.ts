@@ -88,6 +88,32 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             )
     });
+
+    let disposableRenameCheckpointCommand = vscode.commands.registerCommand("checkpoints.renameCheckpoint", checkpointNode => {
+        console.log(`Rename checkpoint command invoked on checkpoint: '${checkpointNode.label}'`);
+
+        vscode.window.showInputBox(
+            { 
+                ignoreFocusOut: true, 
+                prompt: "Type in a new name for the checkpoint.",
+                value: checkpointNode.label,
+                valueSelection: undefined
+            })
+            .then(result => {
+                if (result === undefined) {
+                    console.log(`Rename checkpoint canceled`);
+                    return;
+                }
+
+                if (result === checkpointNode.label) {
+                    console.log(`Checkpoint name is the same as before, returning.`);
+                    return;
+                }
+
+                checkpointsModel.renameCheckpoint(checkpointNode.filePath, checkpointNode.checkpointId, result);
+            })
+
+    });
     
     context.subscriptions.push(
         disposableAddCheckpointCommand,
@@ -96,7 +122,8 @@ export function activate(context: vscode.ExtensionContext) {
         disposableClearFileCommand,
         disposableClearAllCommand,
         disposableRestoreCheckpointCommand,
-        disposableOpenFileCommand
+        disposableOpenFileCommand,
+        disposableRenameCheckpointCommand
     );
 }
 
