@@ -5,7 +5,7 @@ import { CheckpointsModel } from "./CheckpointsModel";
 import { Uri } from "vscode";
 import * as path from 'path';
 
-export class CheckpointsProvider implements vscode.TreeDataProvider<CheckpointNode> {
+export class CheckpointsTreeView implements vscode.TreeDataProvider<CheckpointNode> {
 
     private _onDidChangeTreeData: vscode.EventEmitter<CheckpointNode | undefined> = new vscode.EventEmitter<CheckpointNode | undefined>();
     readonly onDidChangeTreeData: vscode.Event<CheckpointNode | undefined> = this._onDidChangeTreeData.event;

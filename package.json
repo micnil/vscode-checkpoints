@@ -20,18 +20,20 @@
         "shelf",
         "shelve",
         "file backup",
+        "history",
+        "local history",
         "multi-root ready"
     ],
     "activationEvents": [
         "onCommand:checkpoints.addCheckpoint",
-        "onView:checkpointsExplorer"
+        "onView:checkpointsTreeView"
     ],
     "main": "./out/extension",
     "contributes": {
         "views": {
             "explorer": [
                 {
-                    "id": "checkpointsExplorer",
+                    "id": "checkpointsTreeView",
                     "name": "Checkpoints"
                 }
             ]
@@ -108,31 +110,31 @@
             "view/title": [
                 {
                     "command": "checkpoints.refresh",
-                    "when": "view == checkpointsExplorer",
+                    "when": "view == checkpointsTreeView",
                     "group": "navigation"
                 },
                 {
                     "command": "checkpoints.clearAll",
-                    "when": "view == checkpointsExplorer",
+                    "when": "view == checkpointsTreeView",
                     "group": "navigation"
                 }
             ],
             "view/item/context": [
                 {
                     "command": "checkpoints.clearFile",
-                    "when": "view == checkpointsExplorer && viewItem == file"
+                    "when": "view == checkpointsTreeView && viewItem == file"
                 },
                 {
                     "command": "checkpoints.deleteCheckpoint",
-                    "when": "view == checkpointsExplorer && viewItem == checkpoint"
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint"
                 },
                 {
                     "command": "checkpoints.restoreCheckpoint",
-                    "when": "view == checkpointsExplorer && viewItem == checkpoint"
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint"
                 },
                 {
                     "command": "checkpoints.renameCheckpoint",
-                    "when": "view == checkpointsExplorer && viewItem == checkpoint"
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint"
                 }
             ]
         },
