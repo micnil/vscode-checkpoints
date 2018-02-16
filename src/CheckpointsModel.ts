@@ -1,21 +1,92 @@
 'use strict';
 
-import { TextDocument, EventEmitter, Event, ExtensionContext, workspace, window } from 'vscode';
+import { TextDocument, EventEmitter, Event, ExtensionContext, workspace, window, Uri } from 'vscode';
 import * as path from 'path';
 
+interface ICheckpoint {
+
+	/** 
+	 * The id of the checkpoint 
+	*/
+	id: string,
+
+	/**
+	 * Typically the file this checkpoint belongs to
+	 */
+	parent: string,
+
+	/**
+	 * The timestamp for when the checkpoint was created
+	 */
+	timestamp: number,
+
+	/** 
+	 * The name used for labels and such.
+	*/
+	name: string,
+
+	/**
+	 * The text content of the checkpoint.
+	 */
+	text: string,
+}
+
+interface IFile {
+
+	/** 
+	 * Typically the file's absolute path. But we want to call
+	 * this id so that we can support unsaved files later on.
+	*/
+	id: string,
+
+	/**
+	 * The short name to use.
+	 */
+	name: string,
+
+	/** 
+	 * The list of checkpoint IDs that
+	 * belong to this file.
+	*/
+	checkpointIds: string[];
+}
+
+/** 
+ * A normalized redux-like store datastructure 
+ * (https://redux.js.org/docs/recipes/reducers/NormalizingStateShape.html) 
+ * to keep track of the checkpoints state. The datastructure must
+ * be JSON serializable.
+*/
+interface ICheckpointStore {
+    files: {
+		byId: {
+			// Any number of string IDs with File values
+			[id: string]: IFile,
+		};
+		allIds: string[],
+	}
+	checkpoints: {
+		byId: {
+			// Any number of string IDs with Checkpoint values
+			[id: string]: ICheckpoint,
+		}
+		allIds: string[],
+	}
+}
+
 /**
- * Maps all files to an array of checkpoints
+ * Maps all files to an array of checkpoints and updates storage
  */
 export class CheckpointsModel {
 
 	// Events
-	private onDidAddCheckpointEmitter = new EventEmitter<Checkpoint>();
-	get onDidAddCheckpoint(): Event<Checkpoint> {
+	private onDidAddCheckpointEmitter = new EventEmitter<ICheckpoint>();
+	get onDidAddCheckpoint(): Event<ICheckpoint> {
 		return this.onDidAddCheckpointEmitter.event;
 	}
 
-	private onDidRemoveCheckpointEmitter = new EventEmitter<Checkpoint[]>();
-	get onDidRemoveCheckpoint(): Event<Checkpoint[]> {
+	private onDidRemoveCheckpointEmitter = new EventEmitter<ICheckpoint | IFile | ICheckpointStore>();
+	get onDidRemoveCheckpoint(): Event<ICheckpoint | IFile | ICheckpointStore> {
 		return this.onDidRemoveCheckpointEmitter.event;
 	}
 
@@ -24,22 +95,22 @@ export class CheckpointsModel {
 		return this.onDidChangeCheckpointContextEmitter.event;
 	}
 
-	private onDidUpdateCheckpointEmitter = new EventEmitter<Checkpoint>();
-	get onDidUpdateCheckpoint(): Event<Checkpoint> {
+	private onDidUpdateCheckpointEmitter = new EventEmitter<ICheckpoint>();
+	get onDidUpdateCheckpoint(): Event<ICheckpoint> {
 		return this.onDidUpdateCheckpointEmitter.event;
 	}
 
 	// Fields
-	private checkpointStore: Map<string, Checkpoint[]>;
+	private checkpointStore: ICheckpointStore;
     private currentCheckpointContext: string;
 	private context: ExtensionContext;
+	private readonly maxLengthFileName: 35; 
 
 	constructor(context: ExtensionContext) {
 		this.context = context;
 
 		// Initialize the checkpoints map from workspace state or empty.
-		let workspaceState = this.context.workspaceState.get("checkpointsStore", {});
-		this.checkpointStore =  this.deserialize(workspaceState);
+		this.checkpointStore = this.context.workspaceState.get("checkpointsStore", this.createEmptyStore());
 	}
 
 	/**
@@ -66,7 +137,7 @@ export class CheckpointsModel {
 	 * Get all keys (files) from the checkpoint map
 	 */
 	get files(): string[] {
-		return [...this.checkpointStore.keys()];
+		return this.checkpointStore.files.allIds;
 	}
 
 	/**
@@ -82,201 +153,234 @@ export class CheckpointsModel {
 			return;
 		}
 
-		// create the checkpoint
-		let checkpoint = new Checkpoint(document.fileName, document.getText());
-
 		// If there is no entry for this document, then create one
-		if (!this.checkpointStore.has(document.fileName)) {
-			this.checkpointStore.set(document.fileName, []);
+		if (!this.checkpointStore.files.byId[document.fileName]) {
+
+			// Set file name (truncated relative path)
+
+			// First create an uri object of the file path
+			let fileUri = Uri.file(document.fileName);
+			// Get the workspace folder object that contains this file.
+			let workspaceFolder = workspace.getWorkspaceFolder(fileUri);
+			// Get the relative path from workspace root to the file. 
+			let relativeFilePath = path.relative(workspaceFolder.uri.fsPath, document.fileName);
+			// Add the folder name to the path aswell, so we know which workspace the file belongs to.
+			let name = path.join(workspaceFolder.name, relativeFilePath);
+			// Truncate the name if it is too long
+			if (name.length > this.maxLengthFileName) {
+				name = '...' + name.substr(
+					name.length - this.maxLengthFileName, 
+					name.length - 1
+				);
+			}
+
+			// create the file
+			let file: IFile = {
+				id: document.fileName,
+				name: name,
+				checkpointIds: []
+			}
+
+			this.checkpointStore.files.byId[file.id] = file;
+			this.checkpointStore.files.allIds.push(file.id);
 		}
 
-		// Add the checkpoint
-		this.checkpointStore.get(document.fileName).push(checkpoint);
+		// create the checkpoint
+		let timestamp = Date.now();
+		let checkpoint: ICheckpoint = {
+			parent: document.fileName,
+			timestamp: timestamp,
+			text: document.getText(),
+			name: new Date(timestamp).toLocaleString(),
+			id: timestamp.toString(),
+		}
+
+		// Add the checkpoint to the checkpoint store
+		this.checkpointStore.checkpoints.byId[checkpoint.id] = checkpoint;
+		this.checkpointStore.checkpoints.allIds.push(checkpoint.id);
+
+		// Reference the checkpoint in the file
+		this.checkpointStore.files.byId[checkpoint.parent].checkpointIds.push(checkpoint.id)
+
 		this.onDidAddCheckpointEmitter.fire(checkpoint);
 
 		this.updateWorkspaceState(this.checkpointStore);
 	}
 
 	/**
-	 * Deletes all or a specific checkpoint from a file
-	 * @param file The file name (absolute path)
-	 * @param id optional id of the checkpoint to remove
+	 * Deletes all checkpoints, all from a file or one
+	 * checkpoint from the store.
+	 * @param id optional id of the checkpoint or file to remove
 	 */
-	remove(file: string, id?: string): void {
-		let removedCheckpoints;
-		if (!id) {
-			removedCheckpoints = this.clearFile(file);
-		} else {
-			removedCheckpoints = this.deleteCheckpoint(file, id);
+	remove(id?: string): void {
+		console.log("Removing checkpoint(s)");
+		let removedItem: ICheckpoint | IFile | ICheckpointStore;
+
+		// Labeled block that exits as soon as we removed the item.
+		itemRemoved: {
+
+			// If id undefined, delete all checkpoints.  
+			if (!id) {
+				removedItem = this.clearAll();
+				break itemRemoved;
+			}
+			
+			// If id represents a file, clear the file of all checkpoints.
+			let file: IFile = this.getFile(id);
+			if (file) {
+				removedItem = this.clearFile(id);
+				break itemRemoved;
+			}
+
+			// If id represents a checkpoint, delete the checkpoint
+			let checkpoint: ICheckpoint = this.getCheckpoint(id);
+			if (checkpoint) {
+				removedItem = this.deleteCheckpoint(id);
+				break itemRemoved;
+			}
 		}
 
-		if(removedCheckpoints) {
-			this.onDidRemoveCheckpointEmitter.fire(removedCheckpoints);
-			this.updateWorkspaceState(this.checkpointStore);
+		if(!removedItem) {
+			console.warn("The item/items to remove were not found");
+			return;
 		}
-	}
-
-	/** 
-	 * Clears the entire checkpoint store, and updates the workspace state.
-	*/
-	clearAll(): void {
-		this.checkpointStore = new Map<string,Checkpoint[]>();
-		this.onDidRemoveCheckpointEmitter.fire();
+	
+		this.onDidRemoveCheckpointEmitter.fire(removedItem);
 		this.updateWorkspaceState(this.checkpointStore);
 	}
 
 	/**
-	 * Gets all checkpoints for a specific file.
-	 * @param fileName the file to get the checkpoint context from
+	 * Gets all checkpoints or all for a specific file.
+	 * @param fileId optional file id to get checkpoints from
 	 */
-	getCheckpoints(fileName?: string): Checkpoint[] {
-		if (!fileName) {
-			fileName = this.currentCheckpointContext;
+	getCheckpoints(fileId?: string): ICheckpoint[] {
+
+		// The checkpoint IDs to get.
+		let checkpointsIds: string[];
+
+		if (!fileId) {
+			// All checkpoints
+			checkpointsIds = this.checkpointStore.checkpoints.allIds;
+		} else {
+			// All checkoints from a specific file
+			checkpointsIds = this.checkpointStore.files.byId[fileId].checkpointIds;
 		}
 
-		return this.checkpointStore.get(fileName);
+		// Get the checkpoints by their ID
+		let checkpoints = [];
+		for (let checkpointId of checkpointsIds) {
+			checkpoints.push(this.getCheckpoint(checkpointId));
+		}
+
+		return checkpoints;
 	}
 
 	/**
-	 * Delete a checkpoint from the checkpoint context
-	 * @param fileName absolute path to the file
+	 * Get a checkpoint from the checkpoint store
 	 * @param id The id of the checkpoint
 	 */
-	getCheckpoint(fileName: string, id: string): Checkpoint {
-		console.log(`Getting checkpoint with fileName: '${fileName}' and id: '${id}'`);
+	getCheckpoint(id: string): ICheckpoint {
+		return this.checkpointStore.checkpoints.byId[id];
+	}
 
-		if(!this.checkpointStore.has(fileName)){
-			console.error(`The file: '${fileName}' does not exist`);
-			// Throw error?
-			return null;
-		}
-
-		let checkpoints = this.getCheckpoints(fileName);
-		let checkpoint = checkpoints.find( checkpoint => checkpoint.id === id);
-
-		if (!checkpoint) {
-			console.error(`No checkpoint with id: '${id}' in file: '${fileName}'`);
-			// Throw error?
-			return null
-		}
-
-		return checkpoint;
+	/**
+	 * Get a file from the checkpoint store.
+	 * @param id The id of the file
+	 */
+	getFile(id: string): IFile {
+		return this.checkpointStore.files.byId[id];
 	}
 
 	/**
 	 * Rename a specific checkpoint to a new name.
-	 * @param fileName Absolute path to the file
 	 * @param id The id of the checkpoint
 	 * @param newName The name to set
 	 */
-	renameCheckpoint(fileName: string, id: string, newName: string): void {
-		console.log(`Renaming checkpoint with file name '${fileName}' and id: '${id}' to ${newName}`)
-		let checkpoint: Checkpoint = this.getCheckpoint(fileName, id);
-
+	renameCheckpoint(id: string, newName: string): void {
+		console.log(`Renaming checkpoint with id '${id}' to ${newName}`)
+		let checkpoint: ICheckpoint = this.getCheckpoint(id);
 		checkpoint.name = newName;
 		this.onDidUpdateCheckpointEmitter.fire(checkpoint);
 	}
 
 	/**
 	 * Deletes a checkpoint from the model.
-	 * @param file The file name (absolute path)
 	 * @param id The id of the checkpoint
 	 */
-	private deleteCheckpoint(fileName: string, id: string) : Checkpoint[] {
-		console.log(`deleting checkpoint with fileName: '${fileName}' and id: '${id}'`);
+	private deleteCheckpoint(id: string) : ICheckpoint {
+		console.log(`deleting checkpoint with id  '${id}'`);
 
-		if(!this.checkpointStore.has(fileName)){
-			console.error(`The file: '${fileName}' does not exist`);
-			// Throw error?
+		// get the checkpoint
+		let checkpoint = this.getCheckpoint(id);
+		if (!checkpoint) {
+			console.error(`The checkpoint with id: '${id}' does not exist`);
 			return;
 		}
 
-		let checkpoints = this.getCheckpoints(fileName);
-		let checkpointIndex = checkpoints.findIndex( checkpoint => checkpoint.id === id);
+		// Remove the checkpoint
+		delete this.checkpointStore.checkpoints.byId[checkpoint.id];
 
-		if (checkpointIndex === -1) {
-			console.error(`No checkpoint with id: '${id}' in file: '${fileName}'`);
-			// Throw error?
+		// Remove the checkpoint id from the allIds array
+		let cpToRemoveIndex = this.checkpointStore.checkpoints.allIds.findIndex( id => id == checkpoint.id);
+		this.checkpointStore.checkpoints.allIds.splice(cpToRemoveIndex, 1); 
+
+		// Get the file
+		let file = this.getFile(checkpoint.parent);
+		if (!file) {
+			console.error(`Unable to find the file: ${checkpoint.parent} that the checkpoint belongs to.`);
+			return checkpoint;
+		}
+
+		// Remove the checkpoint reference from the file
+		file.checkpointIds = file.checkpointIds.filter( id => id !== checkpoint.id);
+
+		// If the file is now empty of checkpoints, remove the file from store
+		if (file.checkpointIds.length === 0) {
+			delete this.checkpointStore.files.byId[file.id];
+			let fileToRemoveIndex = this.checkpointStore.files.allIds.findIndex( id => id == file.id);
+			let removedFile = this.checkpointStore.files.allIds.splice(fileToRemoveIndex, 1); 
+		}
+
+		return checkpoint;
+	}
+
+	/**
+	 * Deletes all checkpoint that belongs to the a specific file
+	 * @param id The file id
+	 */
+	private clearFile(id: string) : IFile {
+		console.log(`clearing checkpoints from file with id: '${id}'`);
+
+		let file = this.getFile(id);
+
+		if (!file) {
+			console.error(`The file with '${id}' does not exist`);
 			return;
 		}
 
-		// Remove the checkpoint.
-		let removedCheckpoints = checkpoints.splice(checkpointIndex, 1);
-		
-		// If the the store is now empty for this file, remove the key aswell.
-		if(checkpoints.length === 0) {
-			this.checkpointStore.delete(fileName);
+		// Delete all checkpoints that belong to the file
+		for (let checkpointId of file.checkpointIds) {
+			this.deleteCheckpoint(checkpointId);
 		}
 
-		return removedCheckpoints
+		return file;
 	}
 
-	/**
-	 * 	
-	 * @param file The file name (absolute path)
-	 */
-	private clearFile(file: string) : Checkpoint[] {
-		console.log(`clearing checkpoints from file: '${file}'`);
-
-		if(!this.checkpointStore.has(file)){
-			console.error(`The file: '${file}' does not exist`);
-			// Throw error?
-			return;
-		}
-
-		let checkpoints = this.getCheckpoints(file);
-		
-		if (this.checkpointStore.delete(file)) {
-			// delete successfull
-			return checkpoints;
-		}
-
-		// delete unsuccessfull
-		return null;
-	}
-
-	/**
-	 * Serialize the checkpoint store to a simple object.
-	 * @param checkpointStore The checkpoint store
-	 */
-	private serialize(checkpointStore: Map<string, Checkpoint[]>): any {
-
-		let stringifyableStore = {};
-
-		for (let [file, checkpoints] of checkpointStore) {
-			stringifyableStore[file] = checkpoints.map(checkpoint => checkpoint.serialize());
-		}
-
-		return stringifyableStore;
-	}
-
-	/**
-	 * Deserialized an object representation of the checkpoint store. 
-	 * @param obj The object
-	 */
-	private deserialize(obj: any): Map<string, Checkpoint[]> {
-		let checkpointStore = new Map<string, Checkpoint[]>();
-
-		for(let key in obj) {
-
-			// If this is not true, junk has gotten into the workspace state.
-			if (!Array.isArray(obj[key])) {
-				console.error(`Failed to deserilize key '${key}'. Invalid format`);
-				continue
-			};
-
-			let checkpoints: Checkpoint[] = obj[key].map(serializedCheckpoint => Checkpoint.deserialize(serializedCheckpoint)); 
-			checkpointStore.set(key, checkpoints);
-		}
-		return checkpointStore;
+	/** 
+	 * Clears the entire checkpoint store, and updates the workspace state.
+	*/
+	private clearAll(): ICheckpointStore {
+		this.checkpointStore = this.createEmptyStore();
+		this.updateWorkspaceState(this.checkpointStore);
+		return this.checkpointStore;
 	}
 
 	/**
 	 * Serializes and updates the workspace state with the checkpoint store. 
 	 * @param checkpointStore the checkpoint store
 	 */
-	private updateWorkspaceState(checkpointStore: Map<string, Checkpoint[]>) {
-		this.context.workspaceState.update("checkpointsStore", this.serialize(this.checkpointStore))
+	private updateWorkspaceState(checkpointStore: ICheckpointStore) {
+		this.context.workspaceState.update("checkpointsStore", this.checkpointStore)
 			.then( success => {
 				
 				if(!success){
@@ -287,73 +391,20 @@ export class CheckpointsModel {
 			}
 		);
 	}
-}
-
-/**
- * Represents one checkpoint.
- */
-class Checkpoint {
-	/**
-	 * The file this checkpoint belongs to.
-	 */
-	private readonly parent: string;
-
-	
-	/**
-	 * The file version
-	 */
-	private readonly timeStamp: number;
-
-	/**
-	 * The checkpoint name
-	 */
-	public name: string;
-	
-	/**
-	 * The text content of the file
-	 */
-	public readonly text: string;
-
-	constructor(parent: string, text: string) {
-		this.parent = parent;
-		this.text = text;
-		this.timeStamp = Date.now();
-		this.name = new Date(this.timeStamp).toLocaleString();
-	}
-
-	/**
-	 * the id of the checkpoint (string timestamp)
-	 */
-	get id(): string {
-		return this.timeStamp.toString();
-	}
 
 	/** 
-	 * Serializes the checkpoint into a simple object.
+	 * Helper method to create an empty store object.
 	*/
-	public serialize(): any {
+	private createEmptyStore(): ICheckpointStore {
 		return {
-			parent: this.parent,
-			timeStamp: this.timeStamp,
-			text: this.text,
-			name: this.name,
+			files: {
+				byId: {},
+				allIds: []
+			},
+			checkpoints: {
+				byId: {},
+				allIds: []				
+			}
 		}
-	}
-
-	/**
-	 * Static constructor that takes a simple object representation of a checkpoint
-	 * @param obj The checkpoint object.
-	 */
-	public static deserialize(obj: any) : Checkpoint {
-
-		if(!obj.parent || !obj.text || !obj.timeStamp || !obj.name){
-			console.error(`Failed to deserilize checkpoint, invalid format:\n${JSON.stringify(obj, null, 2)}`);
-			return;
-		}
-
-		return Object.assign(
-			new Checkpoint(obj.parent, obj.text), 
-			{timestamp: obj.timestamp, name: obj.name}
-		);
 	}
 }

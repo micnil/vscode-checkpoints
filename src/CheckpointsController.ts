@@ -41,19 +41,19 @@ export class CheckpointsController {
 
         let disposableDeleteCheckpointCommand = commands.registerCommand("checkpoints.deleteCheckpoint", checkpointNode => {
             this.promptAreYouSure(`Are you sure you want to delete checkpoint '${checkpointNode.label}'?`, () => {
-                this.model.remove(checkpointNode.filePath, checkpointNode.checkpointId);
+                this.model.remove(checkpointNode.nodeId);
             });
         });
 
         let disposableClearFileCommand = commands.registerCommand("checkpoints.clearFile", checkpointNode => {
-            this.promptAreYouSure(`Are you sure you want to clear all checkpoints from file '${checkpointNode.filePath}'?`, () => {
-                this.model.remove(checkpointNode.filePath);
+            this.promptAreYouSure(`Are you sure you want to clear all checkpoints from file '${checkpointNode.nodeId}'?`, () => {
+                this.model.remove(checkpointNode.nodeId);
             });
         });
 
         let disposableClearAllCommand = commands.registerCommand("checkpoints.clearAll", node => {
             this.promptAreYouSure(`Are you sure you want to clear ALL checkpoints?`, () => {
-                this.model.clearAll();
+                this.model.remove();
             });
         });
 
@@ -78,10 +78,10 @@ export class CheckpointsController {
      * @param checkpointNode checkpoint node from the tree view
      */
     private onRestoreCheckpoint = (checkpointNode) => {
-        console.log(`Restoring checkpoint: '${checkpointNode.checkpointId}', from file: '${checkpointNode.parent}'`);
+        console.log(`Restoring checkpoint: '${checkpointNode.label}', with id: '${checkpointNode.nodeId}'`);
 
-        // Currently, you can only restore checkpoints if it comes from the currently active document. 
-        if (checkpointNode.filePath !== this.model.checkpointContext) {
+        //Currently, you can only restore checkpoints if it comes from the currently active document. 
+        if (checkpointNode.parentId !== this.model.checkpointContext) {
             console.error(`Failed to restore checkpoint to file '${this.model.checkpointContext}'.`)
             return;
         }
@@ -93,7 +93,7 @@ export class CheckpointsController {
             let documentRange = new Range(new Position(0, 0), lastLine.rangeIncludingLineBreak.end);
 
             // Replace the content of the document with the text of the checkpoint.
-            editorBuilder.replace(documentRange, this.model.getCheckpoint(checkpointNode.filePath, checkpointNode.checkpointId).text);
+            editorBuilder.replace(documentRange, this.model.getCheckpoint(checkpointNode.nodeId).text);
         })
     }
 
@@ -102,9 +102,9 @@ export class CheckpointsController {
      * @param checkpointNode checkpoint node from the tree view 
      */
     private onOpenFile = (checkpointNode) => {
-        console.log(`Opening file: '${checkpointNode.filePath}'`);
+        console.log(`Opening file: '${checkpointNode.nodeId}'`);
 
-        workspace.openTextDocument(checkpointNode.filePath)
+        workspace.openTextDocument(checkpointNode.nodeId)
             .then( 
                 // On success:
                 textDocument => {
@@ -116,7 +116,7 @@ export class CheckpointsController {
                 }, 
                 // on failure:
                 error => {
-                    window.showErrorMessage(`Cannot open file ${checkpointNode.filePath}.`);
+                    window.showErrorMessage(`Cannot open file ${checkpointNode.nodeId}.`);
                     console.error(error.message);
                 }
             )
@@ -148,7 +148,7 @@ export class CheckpointsController {
                         return;
                     }
 
-                    this.model.renameCheckpoint(checkpointNode.filePath, checkpointNode.checkpointId, result);
+                    this.model.renameCheckpoint(checkpointNode.nodeId, result);
                 })
     }
 

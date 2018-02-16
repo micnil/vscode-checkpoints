@@ -2,15 +2,11 @@
 
 import * as vscode from "vscode";
 import { CheckpointsModel } from "./CheckpointsModel";
-import { Uri } from "vscode";
-import * as path from 'path';
 
 export class CheckpointsTreeView implements vscode.TreeDataProvider<CheckpointNode> {
 
     private _onDidChangeTreeData: vscode.EventEmitter<CheckpointNode | undefined> = new vscode.EventEmitter<CheckpointNode | undefined>();
     readonly onDidChangeTreeData: vscode.Event<CheckpointNode | undefined> = this._onDidChangeTreeData.event;
-
-    private readonly maxLengthLabel = 35;
 
     constructor (private model: CheckpointsModel, private context: vscode.ExtensionContext) {
 
@@ -47,35 +43,19 @@ export class CheckpointsTreeView implements vscode.TreeDataProvider<CheckpointNo
      */
     getTreeItem(element: CheckpointNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
 
-        // File nodes
-        if(!element.checkpointId) {
+        // No parent => File nodes
+        if(!element.parentId) {
 
-            // element.filePath is the absolute file path on disk,
-            // we want the path relative the workspace root we are in as label
-
-            // First create an uri object of the file path
-            let fileUri = vscode.Uri.file(element.filePath);
-            // Get the workspace folder object that contains this file.
-            let workspaceFolder = vscode.workspace.getWorkspaceFolder(fileUri);
-            // Get the relative path from workspace root to the file. 
-            let relativeFilePath = path.relative(workspaceFolder.uri.fsPath, element.filePath);
-            // Add the folder name to the path aswell, so we know which workspace the file belongs to.
-            element.label = path.join(workspaceFolder.name, relativeFilePath);
-            // Truncate the label if it is too long
-            if (element.label.length > this.maxLengthLabel) {
-                element.label = '...' + element.label.substr(
-                    element.label.length - this.maxLengthLabel, 
-                    element.label.length - 1
-                );
-            }
+            // Get the file from the model.
+            let file = this.model.getFile(element.nodeId);
 
             // Control the collapsed state of the file. We want it to expand when the file is selected
             // and collapse when it is not selected.
-            element.collapsibleState = this.model.checkpointContext === element.filePath ? 
+            element.collapsibleState = this.model.checkpointContext === file.id ? 
                 vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed; 
 
             // Set the file icon
-            if (this.model.checkpointContext === element.filePath) {
+            if (this.model.checkpointContext === file.id) {
                 element.iconPath = {
                     light: this.context.asAbsolutePath("resources/light/document-selected.svg"),
                     dark: this.context.asAbsolutePath("resources/dark/document-selected.svg")
@@ -86,16 +66,17 @@ export class CheckpointsTreeView implements vscode.TreeDataProvider<CheckpointNo
                     dark: this.context.asAbsolutePath("resources/dark/document.svg")
                 };
             }
-
-            element.contextValue = "file";
-
+            
             element.command = {
                 command: "checkpoints.openFile",
                 arguments: [element],
                 title: "Open File",
             };
 
-            // The id of tree items is used to maintain the selection and collapsible state 
+            element.label = file.name;
+            element.contextValue = "file";
+            
+            // The id field of tree items is used to maintain the selection and collapsible state 
             // of nodes in the tree view. By default, the label is used to create an unique id,
             // But since we want to modify the collapsed state on each update (without 
             // modifying the label), we generate a new id for the node. 
@@ -107,9 +88,10 @@ export class CheckpointsTreeView implements vscode.TreeDataProvider<CheckpointNo
         }
             
         // checkpoint nodes
+        let checkpoint = this.model.getCheckpoint(element.nodeId);
         element.collapsibleState = vscode.TreeItemCollapsibleState.None;
         element.contextValue = "checkpoint";
-        element.label = this.model.getCheckpoint(element.filePath, element.checkpointId).name;
+        element.label = checkpoint.name;
         return element;
     }
 
@@ -124,16 +106,17 @@ export class CheckpointsTreeView implements vscode.TreeDataProvider<CheckpointNo
         // If this is the root, get all files that have been saved
         if (!element) {
             let savedFiles: string[] = this.model.files;
-            return savedFiles.map( file => {
-                return new CheckpointNode(file);
+            return savedFiles.map( fileId => {
+                return new CheckpointNode(fileId);
             })
         }
 
-        // This element must be a file, get all checkpoints for the file.
-        if (!element.checkpointId) {
-            let checkpoints = this.model.getCheckpoints(element.filePath);
+        // This element has no parent, it must be a file, 
+        // get all checkpoints for the file.
+        if (!element.parentId) {
+            let checkpoints = this.model.getCheckpoints(element.nodeId);
             return checkpoints.map( checkpoint => {
-                return new CheckpointNode(element.filePath, checkpoint.id);
+                return new CheckpointNode(checkpoint.id, checkpoint.parent);
             });
         }
         
@@ -157,18 +140,18 @@ class CheckpointNode extends vscode.TreeItem {
     id?: string;
 
     // Custom fields:
-    filePath: string;
-    checkpointId?: string;
+    nodeId: string;
+    parentId?: string;
 
     constructor(
-        filePath: string,
-        checkpointId?: string
+        nodeId: string,
+        parentId?: string
     ) {
         // Will assign TreeItem fields later.
         super("");
 
-        this.filePath = filePath;
-        this.checkpointId = checkpointId;
+        this.nodeId = nodeId;
+        this.parentId = parentId;
     }
 
 }
