@@ -3,7 +3,7 @@
 import { TextDocument, EventEmitter, Event, ExtensionContext, workspace, window, Uri } from 'vscode';
 import * as path from 'path';
 
-interface ICheckpoint {
+export interface ICheckpoint {
 
 	/** 
 	 * The id of the checkpoint 
@@ -31,7 +31,7 @@ interface ICheckpoint {
 	text: string,
 }
 
-interface IFile {
+export interface IFile {
 
 	/** 
 	 * Typically the file's absolute path. But we want to call

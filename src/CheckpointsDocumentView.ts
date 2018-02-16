@@ -1,5 +1,6 @@
 import { TextDocumentContentProvider, ExtensionContext, Uri, Event, EventEmitter, commands } from 'vscode';
-import { CheckpointsModel } from './CheckpointsModel';
+import { CheckpointsModel, ICheckpoint } from './CheckpointsModel';
+import * as path from 'path';
 
 export class CheckpointsDocumentView implements TextDocumentContentProvider {
 	private _onDidChange: EventEmitter<Uri> = new EventEmitter<Uri>();
@@ -7,8 +8,20 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 
 	readonly context: ExtensionContext;
 	constructor(context: ExtensionContext, private model: CheckpointsModel) {
-		this.context = context;
-	}
+        this.context = context;
+
+        context.subscriptions.push(
+            model.onDidRemoveCheckpoint( (checkpoint: ICheckpoint) => {
+                this._onDidChange.fire(this.getCheckpointUri(checkpoint));
+            })
+        );
+        
+        context.subscriptions.push(
+            model.onDidUpdateCheckpoint( checkpoint => {
+                this._onDidChange.fire(this.getCheckpointUri(checkpoint));
+            })
+        );
+    }
 
 	/**
 	 * Diff a checkpoint against a document.
@@ -28,13 +41,10 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 			console.error(`The checkpoint with id: '${checkpointId}' does not exist`);
 			return;
         }
-
-        // Set the checkpoint id to be the 'fragment' of the uri.
-        // The uri 'path' part needs to be a file (fake or not) that has the
-        // right file extension for syntax highlighting to work, we use
-        // the comparing document path. 
-        const checkpointUri = Uri.parse(`checkpointsDocumentView://diff/${comparisonDocumentUri.path}#${checkpoint.id}`);
-        commands.executeCommand('vscode.diff', comparisonDocumentUri, checkpointUri, 'Checkpoint Diff');
+        const checkpointUri = this.getCheckpointUri(checkpoint);
+        const comparingDocumentName = path.basename(checkpointUri.fsPath);
+        const diffTitle = `${comparingDocumentName}<->${checkpoint.name}`;
+        commands.executeCommand('vscode.diff', comparisonDocumentUri, checkpointUri, diffTitle);
 	}
 
 	/**
@@ -47,5 +57,19 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
         let checkpointId = uri.fragment;
         let checkpoint = this.model.getCheckpoint(checkpointId);
 		return checkpoint.text;
-	}
+    }
+
+    /**
+     * Get the uri for the (fake) document. 
+     * @param checkpoint The checkpoint
+     */
+    private getCheckpointUri(checkpoint: ICheckpoint): Uri {
+        const filePath = Uri.file(checkpoint.parent);
+
+        // Set the checkpoint id to be the 'fragment' of the uri.
+        // The uri's 'path' part needs to be a file (fake or not) that has the
+        // right file extension for syntax highlighting to work. We use the parent
+        // files path
+        return Uri.parse(`checkpointsDocumentView://checkpoint/${filePath.path}#${checkpoint.id}`);
+    }
 }
