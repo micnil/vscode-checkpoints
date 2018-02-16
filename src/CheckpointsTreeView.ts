@@ -8,7 +8,7 @@ export class CheckpointsTreeView implements vscode.TreeDataProvider<CheckpointNo
     private _onDidChangeTreeData: vscode.EventEmitter<CheckpointNode | undefined> = new vscode.EventEmitter<CheckpointNode | undefined>();
     readonly onDidChangeTreeData: vscode.Event<CheckpointNode | undefined> = this._onDidChangeTreeData.event;
 
-    constructor (private model: CheckpointsModel, private context: vscode.ExtensionContext) {
+    constructor (private context: vscode.ExtensionContext, private model: CheckpointsModel) {
 
         // register to the models events.
         // TODO: Improve performance by only updating the affected file nodes.

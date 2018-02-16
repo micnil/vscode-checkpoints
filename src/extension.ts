@@ -1,22 +1,33 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import { ExtensionContext } from 'vscode';
 import { CheckpointsModel } from './CheckpointsModel';
 import { CheckpointsTreeView } from './CheckpointsTreeView';
 import { CheckpointsController } from './CheckpointsController';
+import { CheckpointsDocumentView } from './CheckpointsDocumentView';
 
 // this method is called when the extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: ExtensionContext) {
 
-    let activeEditor = vscode.window.activeTextEditor;
-    let checkpointsModel: CheckpointsModel = new CheckpointsModel(context);
-    let checkpointsTreeView: CheckpointsTreeView = new CheckpointsTreeView(checkpointsModel, context);
-    let checkpointsController: CheckpointsController = new CheckpointsController(context, checkpointsModel, checkpointsTreeView);
-    checkpointsController.initialize();
+    // Initialize views, models and controllers.
+	let checkpointsModel: CheckpointsModel = new CheckpointsModel(context);
+	let checkpointsTreeView: CheckpointsTreeView = new CheckpointsTreeView(
+        context,
+		checkpointsModel
+	);
+	let checkpointsDocumentView: CheckpointsDocumentView = new CheckpointsDocumentView(
+        context, 
+        checkpointsModel
+    );
+	let checkpointsController: CheckpointsController = new CheckpointsController(
+		context,
+		checkpointsModel,
+		checkpointsTreeView,
+		checkpointsDocumentView,
+    );
+    
+	checkpointsController.initialize();
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {
-}
+export function deactivate() {}
