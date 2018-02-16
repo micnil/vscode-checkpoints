@@ -136,19 +136,23 @@
                 },
                 {
                     "command": "checkpoints.deleteCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint"
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "group": "2_modification@3"
                 },
                 {
                     "command": "checkpoints.restoreCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint"
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "group": "2_modification@2"
                 },
                 {
                     "command": "checkpoints.renameCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint"
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "group": "2_modification@1"
                 },
                 {
                     "command": "checkpoints.diffToCurrent",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint"
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "group": "1_compare"
                 }
             ]
         },
