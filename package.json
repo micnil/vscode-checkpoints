@@ -80,6 +80,10 @@
             {
                 "command": "checkpoints.diffToCurrent",
                 "title": "Diff To Current"
+            },
+            {
+                "command": "checkpoints.openFile",
+                "title": "Open File"
             }
         ],
         "menus": {
@@ -113,8 +117,12 @@
                     "when": "false"
                 },
                 {
-                "command": "checkpoints.diffToCurrent",
-                "when": "false"
+                    "command": "checkpoints.diffToCurrent",
+                    "when": "false"
+                },
+                {
+                    "command": "checkpoints.openFile",
+                    "when": "false"
                 }
             ],
             "view/title": [
@@ -132,6 +140,10 @@
             "view/item/context": [
                 {
                     "command": "checkpoints.clearFile",
+                    "when": "view == checkpointsTreeView && viewItem == file"
+                },
+                {
+                    "command": "checkpoints.openFile",
                     "when": "view == checkpointsTreeView && viewItem == file"
                 },
                 {
@@ -177,6 +189,16 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show a text input dialog when adding a new checkpoint to specify the checkpoint name. If disabled, the date-time value will be used."
+                },
+                "checkpoints.autoSelectFile": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines whether a file item in the tree explorer will automatically expand/collapse when moving between files."
+                },
+                "checkpoints.autoOpenFile": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines whether selecting a file in the tree explorer will automatically open the document."
                 }
             }
         }

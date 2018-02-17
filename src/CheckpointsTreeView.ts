@@ -8,7 +8,8 @@ import {
     TreeItemCollapsibleState,
     ProviderResult,
     Uri,
-    Command
+	Command,
+	workspace
 } from 'vscode';
 import { CheckpointsModel, ICheckpointStore, IFile, ICheckpoint } from './CheckpointsModel';
 
@@ -62,6 +63,8 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 	getTreeItem(element: CheckpointNode): TreeItem | Thenable<TreeItem> {
 		// No parent => File nodes
 		if (!element.parentId) {
+
+			const config = workspace.getConfiguration('checkpoints');
 			// Get the file from the model.
 			let file = this.model.getFile(element.nodeId);
 
@@ -85,11 +88,13 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 				};
 			}
 
-			element.command = {
-				command: 'checkpoints.openFile',
-				arguments: [element],
-				title: 'Open File',
-			};
+			if (config.get('autoOpenFile')) {
+				element.command = {
+					command: 'checkpoints.openFile',
+					arguments: [element],
+					title: 'Open File',
+				};
+			}
 
 			let label = file.name;
 
@@ -101,15 +106,20 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 			element.label = label;
 			element.contextValue = 'file';
 
-			// The id field of tree items is used to maintain the selection and collapsible state
-			// of nodes in the tree view. By default, the label is used to create an unique id,
-			// But since we want to modify the collapsed state on each update (without
-			// modifying the label), we generate a new id for the node.
-			// To keep the dependencies of the extension to a minimum this little random
-			// id generator is used. The entropy is not that important, worst case
-			// scenario is that the node doesn't collapse/expand when it is supposed to.
-			element.id = String(Math.floor(Math.random() * 9e15));
+			if(workspace.getConfiguration('checkpoints').get('autoSelectFile')) {
+				// The id field of tree items is used to maintain the selection and collapsible state
+				// of nodes in the tree view. By default, the label is used to create an unique id,
+				// But since we want to modify the collapsed state on each update (without
+				// modifying the label), we generate a new id for the node.
+				// To keep the dependencies of the extension to a minimum this little random
+				// id generator is used. The entropy is not that important, worst case
+				// scenario is that the node doesn't collapse/expand when it is supposed to.
+				element.id = String(Math.floor(Math.random() * 9e15));
+			} else {
+				element.id = file.id;
+			}
 			return element;
+
 		}
 
 		// checkpoint nodes
