@@ -7,25 +7,25 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   viewBox="0 0 16 16"
+   viewBox="0 0 32 32"
    version="1.1"
-   id="svg5098"
-   sodipodi:docname="document-selected.svg"
+   id="svg4489"
+   sodipodi:docname="file-selected.svg"
    inkscape:version="0.92.1 r15371">
   <metadata
-     id="metadata5104">
+     id="metadata4495">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title>default_file</dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <defs
-     id="defs5102" />
+     id="defs4493" />
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -37,32 +37,19 @@
      inkscape:pageshadow="2"
      inkscape:window-width="1920"
      inkscape:window-height="1057"
-     id="namedview5100"
+     id="namedview4491"
      showgrid="false"
-     inkscape:zoom="14.75"
-     inkscape:cx="8"
-     inkscape:cy="8"
-     inkscape:window-x="1912"
+     inkscape:zoom="28.28125"
+     inkscape:cx="16"
+     inkscape:cy="17.096133"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg5098" />
-  <style
-     id="style5092">.icon-canvas-transparent{opacity:0;fill:#2d2d30}.icon-vs-out{fill:#2d2d30}.icon-vs-bg{fill:#c5c5c5}.icon-vs-fg{fill:#2b282e}</style>
+     inkscape:current-layer="svg4489" />
+  <title
+     id="title4485">default_file</title>
   <path
-     class="icon-canvas-transparent"
-     d="M16 16H0V0h16v16z"
-     id="canvas" />
-  <path
-     class="icon-vs-out"
-     d="M15 16H2V0h8.621L15 4.379V16z"
-     id="outline" />
-  <path
-     class="icon-vs-fg"
-     d="M13 14H4V2h5v4h4v8zm-3-9V2.207L12.793 5H10z"
-     id="iconFg" />
-  <path
-     class="icon-vs-bg"
-     d="M3 1v14h11V4.793L10.207 1H3zm10 13H4V2h5v4h4v8zm-3-9V2.207L12.793 5H10z"
-     id="iconBg"
-     style="fill:#c5c54f;fill-opacity:1" />
+     d="M20.75,2H4.35V30h23.3V9Zm4.6,25.7H6.75V4.3h11.7v7h7V27.7Z"
+     style="fill:#d2b386;fill-opacity:1"
+     id="path4487" />
 </svg>

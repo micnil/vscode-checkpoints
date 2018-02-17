@@ -70,13 +70,13 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 			// Set the file icon
 			if (this.model.checkpointContext.fsPath === file.id) {
 				element.iconPath = {
-					light: this.context.asAbsolutePath('resources/light/document-selected.svg'),
-					dark: this.context.asAbsolutePath('resources/dark/document-selected.svg'),
+					light: this.context.asAbsolutePath('resources/light/file-selected.svg'),
+					dark: this.context.asAbsolutePath('resources/dark/file-selected.svg'),
 				};
 			} else {
 				element.iconPath = {
-					light: this.context.asAbsolutePath('resources/light/document.svg'),
-					dark: this.context.asAbsolutePath('resources/dark/document.svg'),
+					light: this.context.asAbsolutePath('resources/light/file.svg'),
+					dark: this.context.asAbsolutePath('resources/dark/file.svg'),
 				};
 			}
 
