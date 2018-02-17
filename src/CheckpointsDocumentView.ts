@@ -22,9 +22,6 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 			model.onDidRemoveCheckpoint((checkpoint: ICheckpoint) => {
 				this._onDidChange.fire(this.getCheckpointUri(checkpoint));
 			}),
-		);
-
-		context.subscriptions.push(
 			model.onDidUpdateItem((checkpoint: ICheckpoint) => {
 				this._onDidChange.fire(this.getCheckpointUri(checkpoint));
 			}),

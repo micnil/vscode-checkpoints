@@ -27,21 +27,12 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 			model.onDidChangeCheckpointContext(filename => {
 				this._onDidChangeTreeData.fire();
 			}),
-		);
-
-		context.subscriptions.push(
 			model.onDidAddCheckpoint(checkpoint => {
 				this._onDidChangeTreeData.fire();
 			}),
-		);
-
-		context.subscriptions.push(
 			model.onDidRemoveCheckpoint(checkpoint => {
 				this._onDidChangeTreeData.fire();
 			}),
-		);
-
-		context.subscriptions.push(
 			model.onDidUpdateItem(checkpoint => {
 				this._onDidChangeTreeData.fire();
 			}),
