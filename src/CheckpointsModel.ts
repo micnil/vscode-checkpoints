@@ -157,11 +157,6 @@ export class CheckpointsModel {
 	 */
 	add(document: TextDocument, name: string, timestamp: number): void {
 		console.log(`Adding file '${document.fileName}' to checkpoint store.`);
-
-		if (document.isUntitled) {
-			console.log(`Failed to add file to store. Unsaved documents are currently not supported`);
-			throw new Error("Untitled documents are currently not supported")
-		}
 		
 		// If there is no entry for this document, then create one
 		if (!this.checkpointStore.files.byId[document.fileName]) {

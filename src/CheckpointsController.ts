@@ -12,7 +12,7 @@ import {
 	Uri
 } from 'vscode';
 import { CheckpointsModel } from './CheckpointsModel';
-import { CheckpointsTreeView } from './CheckpointsTreeView';
+import { CheckpointsTreeView, CheckpointNode } from './CheckpointsTreeView';
 import { CheckpointsDocumentView } from './CheckpointsDocumentView';
 
 export class CheckpointsController {
@@ -83,14 +83,9 @@ export class CheckpointsController {
 		);
 
 		this.context.subscriptions.push(
-			commands.registerCommand('checkpoints.diffToCurrent', checkpointNode => {
-				this.documentView.showDiff(this.activeEditor.document.uri, checkpointNode.nodeId);
-			}),
-		);
-
-		this.context.subscriptions.push(
 			commands.registerCommand('checkpoints.refresh', this.treeView.refresh, this.treeView),
 			commands.registerCommand('checkpoints.addCheckpoint', this.onAddCheckpoint, this),
+			commands.registerCommand('checkpoints.diffToCurrent', this.onDiffToCurrent, this),
 			commands.registerCommand('checkpoints.restoreCheckpoint', this.onRestoreCheckpoint, this),
 			commands.registerCommand('checkpoints.openFile', this.onOpenFile, this),
 			commands.registerCommand('checkpoints.renameCheckpoint', this.onRenameCheckpoint, this),
@@ -102,7 +97,13 @@ export class CheckpointsController {
 	 * Tries to add a new checkpoint from the current document to
 	 * the checkpoint model.
 	*/
-	private onAddCheckpoint() {
+	private async onAddCheckpoint() {
+
+		if (this.activeEditor.document.isUntitled) {
+			console.log(`Failed to add file to store. Unsaved documents are currently not supported`);
+			window.showInformationMessage("Untitled documents are currently not supported");
+			return;
+		}
 
 		const timestamp = Date.now();
 		
@@ -130,33 +131,31 @@ export class CheckpointsController {
 		}
 
 		// Ask the user for a checkpoint name
-		window.showInputBox({
+		let result = await window.showInputBox({
 			ignoreFocusOut: true,
 			prompt: 'Give your checkpoint a name.',
 			value: defaultName,
 			valueSelection: undefined,
 		})
-		.then(result => {
+		
+		if (result === undefined) {
+			console.log(`Add checkpoint canceled`);
+			return;
+		}
 
-			if (result === undefined) {
-				console.log(`Add checkpoint canceled`);
-				return;
-			}
+		// User provided no name.
+		if (result === "") {
+			result = "Untitled"
+		}
 
-			// User provided no name.
-			if (result === "") {
-				result = "Untitled"
-			}
-
-			addCheckpoint(result);
-		});
+		addCheckpoint(result);
 	}
 
 	/**
 	 * Get the checkpoints saved document and replaces the text in the editor
 	 * @param checkpointNode checkpoint node from the tree view
 	 */
-	private async onRestoreCheckpoint(checkpointNode) {
+	private async onRestoreCheckpoint(checkpointNode: CheckpointNode) {
 		console.log(
 			`Restoring checkpoint: '${checkpointNode.label}', with id: '${checkpointNode.nodeId}'`,
 		);
@@ -205,7 +204,7 @@ export class CheckpointsController {
 	 * Opens the current file of the checkpoint.
 	 * @param checkpointNode checkpoint node from the tree view
 	 */
-	private onOpenFile(checkpointNode) {
+	private onOpenFile(checkpointNode: CheckpointNode) {
 		console.log(`Opening file: '${checkpointNode.nodeId}'`);
 
 		workspace.openTextDocument(checkpointNode.nodeId).then(
@@ -229,7 +228,7 @@ export class CheckpointsController {
 	 * updates the model.
 	 * @param checkpointNode checkpoint node from the tree view
 	 */
-	private onRenameCheckpoint(checkpointNode) {
+	private onRenameCheckpoint(checkpointNode: CheckpointNode) {
 		console.log(`Rename checkpoint command invoked on checkpoint: '${checkpointNode.label}'`);
 
 		window
@@ -253,6 +252,20 @@ export class CheckpointsController {
 				this.model.renameCheckpoint(checkpointNode.nodeId, result);
 			});
 	};
+
+	/**
+	 * Gets the text document passes it to the diff view.
+	 * @param checkpointNode Checkpoint node to diff against
+	 */
+	private async onDiffToCurrent(checkpointNode: CheckpointNode) {
+		try {
+			let textDocument = await workspace.openTextDocument(checkpointNode.parentId);
+			this.documentView.showDiff(textDocument.uri, checkpointNode.nodeId);
+		} catch (err) {
+			console.log(err);
+			window.showErrorMessage(`Failed to show diff for ${checkpointNode.label}: ${err.message}`);
+		}
+	}
 	
 	/** 
 	 * Toggles the configuration showActiveFileOnly

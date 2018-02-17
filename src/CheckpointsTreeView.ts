@@ -177,7 +177,7 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
  * One node in the tree view. Can either represent a file (collapsible root)
  * or a checkpoint.
  */
-class CheckpointNode extends TreeItem {
+export class CheckpointNode extends TreeItem {
 	// TreeItem fields:
 	label: string;
 	iconPath?: string | Uri | { light: string | Uri; dark: string | Uri };
