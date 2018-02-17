@@ -7,6 +7,7 @@ import {
 	Range,
 	MessageItem,
 	workspace,
+	TextDocument,
 } from 'vscode';
 import { CheckpointsModel } from './CheckpointsModel';
 import { CheckpointsTreeView } from './CheckpointsTreeView';
@@ -109,25 +110,30 @@ export class CheckpointsController {
 	 * the checkpoint model.
 	*/
 	private onAddCheckpoint() {
-		const config = workspace.getConfiguration('checkpoints');
-		
+
 		const timestamp = Date.now();
 		
+		// local helper method to a a checkpoint.
+		let addCheckpoint = (name: string) => {
+			try {
+				this.model.add(this.activeEditor.document, name, timestamp);
+				this.activeEditor.document.save();
+				window.showInformationMessage(`Added checkpoint '${defaultName}' `)
+			} catch (err) {
+				window.showErrorMessage(`Add checkpoint failed: ${err.message}`)
+			}
+		}
+
+		const config = workspace.getConfiguration('checkpoints');
+
 		// create default name
 		let locale: string = config.get('locale');
 		const defaultName = new Date(timestamp).toLocaleString(locale);
 		
 		// If "ask for checkpoint name" is disabled, use default name.
 		if (config.get('askForCheckpointName') === false) {
-			try {
-				this.model.add(this.activeEditor.document, defaultName, timestamp);
-				this.activeEditor.document.save();
-				window.showInformationMessage(`Added checkpoint '${defaultName}' `)
-			} catch (err) {
-				window.showErrorMessage(`Add checkpoint failed: ${err.message}`)
-			} finally {
-				return;
-			}
+			addCheckpoint(defaultName);
+			return;
 		}
 
 		// Ask the user for a checkpoint name
@@ -148,14 +154,8 @@ export class CheckpointsController {
 			if (result === "") {
 				result = "Untitled"
 			}
-			
-			try {
-				this.model.add(this.activeEditor.document, result, timestamp);
-				this.activeEditor.document.save();
-				window.showInformationMessage(`Added checkpoint '${result}' `)
-			} catch (err) {
-				window.showErrorMessage(`Add checkpoint failed: ${err.message}`)
-			}
+
+			addCheckpoint(result);
 		});
 	}
 
