@@ -18,20 +18,11 @@
         "Other"
     ],
     "keywords": [
-        "checkpoint",
         "checkpoints",
-        "code checkpoints",
         "stash",
-        "file stash",
-        "save slots",
-        "shelf",
-        "shelve",
-        "file backup",
-        "history",
-        "local history",
-        "snapshot",
-        "file snapshot",
-        "multi-root ready"
+        "save",
+        "backup",
+        "history"
     ],
     "activationEvents": [
         "onCommand:checkpoints.addCheckpoint",
