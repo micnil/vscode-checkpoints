@@ -1,5 +1,5 @@
 # Change Log
-All notable changes to the "code-save-slots" extension will be documented in this file.
+All notable changes to the "vscode-checkpoints" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
