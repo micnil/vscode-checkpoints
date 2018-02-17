@@ -118,7 +118,7 @@ export class CheckpointsController {
 			try {
 				this.model.add(this.activeEditor.document, name, timestamp);
 				this.activeEditor.document.save();
-				window.showInformationMessage(`Added checkpoint '${defaultName}' `)
+				window.setStatusBarMessage(`Added checkpoint '${defaultName}'`, 5000)
 			} catch (err) {
 				window.showErrorMessage(`Add checkpoint failed: ${err.message}`)
 			}

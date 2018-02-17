@@ -10,7 +10,7 @@ import {
     Uri,
     Command
 } from 'vscode';
-import { CheckpointsModel } from './CheckpointsModel';
+import { CheckpointsModel, ICheckpointStore, IFile, ICheckpoint } from './CheckpointsModel';
 
 export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 	private _onDidChangeTreeData: EventEmitter<CheckpointNode | undefined> = new EventEmitter<CheckpointNode | undefined>();
@@ -19,6 +19,9 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 	constructor(private context: ExtensionContext, private model: CheckpointsModel) {
 		// register to the models events.
 		// TODO: Improve performance by only updating the affected file nodes.
+		// This can be problematic with out keeping a representation of the 
+		// current tree view state. _onDidChangeTreeData only takes CheckpointNode
+		// as argument.
 		context.subscriptions.push(
 			model.onDidChangeCheckpointContext(filename => {
 				this._onDidChangeTreeData.fire();
@@ -38,7 +41,7 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 		);
 
 		context.subscriptions.push(
-			model.onDidUpdateCheckpoint(checkpoint => {
+			model.onDidUpdateItem(checkpoint => {
 				this._onDidChangeTreeData.fire();
 			}),
 		);
@@ -88,7 +91,14 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 				title: 'Open File',
 			};
 
-			element.label = file.name;
+			let label = file.name;
+
+			// File has name duplicates, add extra name.
+			if (file.fileNameDuplicates.length > 0) {
+				label = label + ` (${file.extraName})`;
+			}
+
+			element.label = label;
 			element.contextValue = 'file';
 
 			// The id field of tree items is used to maintain the selection and collapsible state

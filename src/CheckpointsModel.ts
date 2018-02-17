@@ -45,6 +45,17 @@ export interface IFile {
 	name: string,
 
 	/** 
+	 * If the name prop has duplicates, use this extra part
+	 * to distinguish betweeen them.
+	*/
+	extraName: string,
+
+	/** 
+	 * list of all file IDs with duplicate names.
+	*/
+	fileNameDuplicates: string[],
+
+	/** 
 	 * The list of checkpoint IDs that
 	 * belong to this file.
 	*/
@@ -57,7 +68,7 @@ export interface IFile {
  * to keep track of the checkpoints state. The datastructure must
  * be JSON serializable.
 */
-interface ICheckpointStore {
+export interface ICheckpointStore {
     files: {
 		byId: {
 			// Any number of string IDs with File values
@@ -95,16 +106,16 @@ export class CheckpointsModel {
 		return this.onDidChangeCheckpointContextEmitter.event;
 	}
 
-	private onDidUpdateCheckpointEmitter = new EventEmitter<ICheckpoint>();
-	get onDidUpdateCheckpoint(): Event<ICheckpoint> {
-		return this.onDidUpdateCheckpointEmitter.event;
+	private onDidUpdateItemEmitter = new EventEmitter<ICheckpoint | IFile>();
+	get onDidUpdateItem(): Event<ICheckpoint | IFile> {
+		return this.onDidUpdateItemEmitter.event;
 	}
 
 	// Fields
 	private checkpointStore: ICheckpointStore;
     private currentCheckpointContext: string;
 	private context: ExtensionContext;
-	private readonly maxLengthFileName: 35; 
+	private readonly maxLengthFileName: 15; 
 
 	constructor(context: ExtensionContext) {
 		this.context = context;
@@ -155,31 +166,34 @@ export class CheckpointsModel {
 		// If there is no entry for this document, then create one
 		if (!this.checkpointStore.files.byId[document.fileName]) {
 
-			// Set file name (truncated relative path)
+			// Set file name and extra name (truncated relative path)
 
 			// First create an uri object of the file path
 			let fileUri = Uri.file(document.fileName);
-			// Get the workspace folder object that contains this file.
-			let workspaceFolder = workspace.getWorkspaceFolder(fileUri);
 			// Get the relative path from workspace root to the file. 
-			let relativeFilePath = path.relative(workspaceFolder.uri.fsPath, document.fileName);
-			// Add the folder name to the path aswell, so we know which workspace the file belongs to.
-			let name = path.join(workspaceFolder.name, relativeFilePath);
+			let relativeFilePath = workspace.asRelativePath(fileUri);
+			// Remove the active file name and use as extra name.
+			let extraName = path.dirname(relativeFilePath);
 			// Truncate the name if it is too long
-			if (name.length > this.maxLengthFileName) {
-				name = '...' + name.substr(
-					name.length - this.maxLengthFileName, 
-					name.length - 1
+			if (extraName.length > this.maxLengthFileName) {
+				extraName = '...' + extraName.substr(
+					extraName.length - this.maxLengthFileName, 
+					extraName.length - 1
 				);
 			}
+
+			let baseName = path.basename(document.fileName);
 
 			// create the file
 			let file: IFile = {
 				id: document.fileName,
-				name: name,
+				name: baseName,
+				extraName: extraName,
+				fileNameDuplicates: [],
 				checkpointIds: []
 			}
 
+			this.handleNewDuplicates(file);
 			this.checkpointStore.files.byId[file.id] = file;
 			this.checkpointStore.files.allIds.push(file.id);
 		}
@@ -298,7 +312,7 @@ export class CheckpointsModel {
 		console.log(`Renaming checkpoint with id '${id}' to ${newName}`)
 		let checkpoint: ICheckpoint = this.getCheckpoint(id);
 		checkpoint.name = newName;
-		this.onDidUpdateCheckpointEmitter.fire(checkpoint);
+		this.onDidUpdateItemEmitter.fire(checkpoint);
 	}
 
 	/**
@@ -336,7 +350,8 @@ export class CheckpointsModel {
 		if (file.checkpointIds.length === 0) {
 			delete this.checkpointStore.files.byId[file.id];
 			let fileToRemoveIndex = this.checkpointStore.files.allIds.findIndex( id => id == file.id);
-			let removedFile = this.checkpointStore.files.allIds.splice(fileToRemoveIndex, 1); 
+			this.checkpointStore.files.allIds.splice(fileToRemoveIndex, 1); 
+			this.handleRemovedDuplicates(file);
 		}
 
 		return checkpoint;
@@ -389,6 +404,54 @@ export class CheckpointsModel {
 			}
 		);
 	}
+
+	/**
+	 * Checks the store of a previously removed file
+	 * had any file name duplicates, and if it does,
+	 * unmarks itself from their fileNameDuplicates array.
+	 * @param removedFile The file that has been removed.
+	 */
+	private handleRemovedDuplicates(removedFile: IFile) {
+
+		for (let fileId of removedFile.fileNameDuplicates) {
+			let duplicatefile = this.checkpointStore.files.byId[fileId];
+
+			let removeIndex = duplicatefile.fileNameDuplicates.findIndex( id => id === removedFile.id);
+
+			// Not found
+			if(removeIndex === -1) {
+				console.error(
+					`The removed file has marked ${duplicatefile.name} as duplicate,
+					 but this was not mutual`
+				);
+			}
+
+			duplicatefile.fileNameDuplicates.splice(removeIndex, 1);
+		}
+	}
+
+	/**
+	 * Checks the store if the new (not-yet added) file
+	 * has any duplicate file names, and adds their 
+	 * respective IDs to their fileNameDuplicates arrays
+	 * if they do.
+	 * @param newFile The file that WILL be added
+	 */
+	private handleNewDuplicates(newFile: IFile) {
+		for (let fileId of this.checkpointStore.files.allIds) {
+			let file = this.checkpointStore.files.byId[fileId];
+
+			// If this is not a duplicate, just continue;
+			if (newFile.name !== file.name) {
+				continue;
+			}
+
+			// This file is a duplicate
+			newFile.fileNameDuplicates.push(file.id)
+			file.fileNameDuplicates.push(newFile.id);
+		}
+	}
+
 
 	/** 
 	 * Helper method to create an empty store object.
