@@ -8,6 +8,8 @@ import {
 	MessageItem,
 	workspace,
 	TextDocument,
+	WorkspaceEdit,
+	Uri
 } from 'vscode';
 import { CheckpointsModel } from './CheckpointsModel';
 import { CheckpointsTreeView } from './CheckpointsTreeView';
@@ -154,35 +156,49 @@ export class CheckpointsController {
 	 * Get the checkpoints saved document and replaces the text in the editor
 	 * @param checkpointNode checkpoint node from the tree view
 	 */
-	private onRestoreCheckpoint(checkpointNode) {
+	private async onRestoreCheckpoint(checkpointNode) {
 		console.log(
 			`Restoring checkpoint: '${checkpointNode.label}', with id: '${checkpointNode.nodeId}'`,
 		);
+		
+		let textDocument: TextDocument; 	
+		let success: boolean;
+		try {
+			// Get the document to edit.
+			textDocument = await workspace.openTextDocument(checkpointNode.parentId);
 
-		//Currently, you can only restore checkpoints if it comes from the currently active document.
-		if (checkpointNode.parentId !== this.model.checkpointContext) {
-			console.error(
-				`Failed to restore checkpoint to file '${this.model.checkpointContext}'.`,
+			// Create a range spanning the entire content of the file
+			let lastLine = textDocument.lineAt(textDocument.lineCount - 1);
+			let documentRange = new Range(new Position(0, 0), lastLine.rangeIncludingLineBreak.end);
+
+			// Create an edit job
+			let workspaceEdit = new WorkspaceEdit();
+			workspaceEdit.replace(
+				Uri.file(checkpointNode.parentId), 
+				documentRange, 
+				this.model.getCheckpoint(checkpointNode.nodeId).text
 			);
+
+			// Apply the edit job
+			success = await workspace.applyEdit(workspaceEdit);
+
+			if (success) {
+				textDocument.save();
+				window.showInformationMessage(`Restored '${textDocument.fileName}' to checkpoint '${checkpointNode.label}'`);
+			}
+		} catch (err) {
+			window.showErrorMessage(`Failed to restore file '${checkpointNode.parentId}': ${err.message}`);
+			console.error(err);
 			return;
 		}
 
-		this.activeEditor.edit(editorBuilder => {
-			// Create a range spanning the entire content of the file
-			let lastLine = this.activeEditor.document.lineAt(
-				this.activeEditor.document.lineCount - 1,
-			);
-			let documentRange = new Range(new Position(0, 0), lastLine.rangeIncludingLineBreak.end);
-
-			// Replace the content of the document with the text of the checkpoint.
-			editorBuilder.replace(
-				documentRange,
-				this.model.getCheckpoint(checkpointNode.nodeId).text,
-            );
-            
-            // Save the document
-            this.activeEditor.document.save();
-		});
+		// The file is not open in the currently active editor, open it.
+		if (success && checkpointNode.parentId !== this.model.checkpointContext) {
+			let editor = await window.showTextDocument(textDocument, {
+				preserveFocus: false,
+				preview: true,
+			});
+		}
 	};
 
 	/**
