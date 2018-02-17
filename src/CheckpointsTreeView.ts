@@ -20,7 +20,7 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 	constructor(private context: ExtensionContext, private model: CheckpointsModel) {
 		// register to the models events.
 		// TODO: Improve performance by only updating the affected file nodes.
-		// This can be problematic with out keeping a representation of the 
+		// This can be problematic without keeping a representation of the 
 		// current tree view state. _onDidChangeTreeData only takes CheckpointNode
 		// as argument.
 		context.subscriptions.push(
@@ -65,6 +65,7 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 		if (!element.parentId) {
 
 			const config = workspace.getConfiguration('checkpoints');
+
 			// Get the file from the model.
 			let file = this.model.getFile(element.nodeId);
 
@@ -137,6 +138,19 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 	 * @param element The element to get the children from.
 	 */
 	getChildren(element?: CheckpointNode): ProviderResult<CheckpointNode[]> {
+		const config = workspace.getConfiguration('checkpoints');
+		const showActiveFileOnly = config.get('showActiveFileOnly');
+		
+		// If this is the root, and we only want to show the checkpoints
+		// that belong to the currently active file only, return checkpoint
+		// nodes.
+		if (!element && showActiveFileOnly) {
+			let checkpoints = this.model.getCheckpoints(this.model.checkpointContext);
+			return checkpoints.map(checkpoint => {
+				return new CheckpointNode(checkpoint.id, checkpoint.parent);
+			});
+		}
+
 		// If this is the root, get all files that have been saved
 		if (!element) {
 			let savedFiles: string[] = this.model.files;

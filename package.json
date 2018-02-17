@@ -84,6 +84,10 @@
             {
                 "command": "checkpoints.openFile",
                 "title": "Open File"
+            },
+            {
+                "command": "checkpoints.toggleTreeViewContext",
+                "title": "Toggle Show Active File Only"
             }
         ],
         "menus": {
@@ -123,6 +127,10 @@
                 {
                     "command": "checkpoints.openFile",
                     "when": "false"
+                },
+                {
+                    "command": "checkpoints.toggleTreeViewContext",
+                    "when": "false"
                 }
             ],
             "view/title": [
@@ -134,7 +142,12 @@
                 {
                     "command": "checkpoints.clearAll",
                     "when": "view == checkpointsTreeView",
-                    "group": "navigation"
+                    "group": "modify"
+                },
+                {
+                    "command": "checkpoints.toggleTreeViewContext",
+                    "when": "view == checkpointsTreeView",
+                    "group": "settings"
                 }
             ],
             "view/item/context": [
@@ -199,6 +212,11 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Determines whether selecting a file in the tree explorer will automatically open the document."
+                },
+                "checkpoints.showActiveFileOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Determines if only the active file should be visible in the tree explorer or not."
                 }
             }
         }

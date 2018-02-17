@@ -46,22 +46,11 @@ export class CheckpointsController {
 
 		this.context.subscriptions.push(
 			window.registerTreeDataProvider('checkpointsTreeView', this.treeView),
-		);
-
-		this.context.subscriptions.push(
-			workspace.registerTextDocumentContentProvider(
-				'checkpointsDocumentView',
-				this.documentView,
-			),
+			workspace.registerTextDocumentContentProvider('checkpointsDocumentView', this.documentView),
 		);
 
 		// Register commands
 		// =================
-		this.context.subscriptions.push(
-			commands.registerCommand('checkpoints.refresh', () => {
-				this.treeView.refresh();
-			}),
-		);
 
 		this.context.subscriptions.push(
 			commands.registerCommand('checkpoints.deleteCheckpoint', checkpointNode => {
@@ -98,10 +87,12 @@ export class CheckpointsController {
 		);
 
 		this.context.subscriptions.push(
+			commands.registerCommand('checkpoints.refresh', this.treeView.refresh, this.treeView),
 			commands.registerCommand('checkpoints.addCheckpoint', this.onAddCheckpoint, this),
 			commands.registerCommand('checkpoints.restoreCheckpoint', this.onRestoreCheckpoint, this),
 			commands.registerCommand('checkpoints.openFile', this.onOpenFile, this),
-			commands.registerCommand('checkpoints.renameCheckpoint', this.onRenameCheckpoint, this)
+			commands.registerCommand('checkpoints.renameCheckpoint', this.onRenameCheckpoint, this),
+			commands.registerCommand('checkpoints.toggleTreeViewContext', this.onToggleShowActiveFileOnly, this)
 		);
 	}
 
@@ -245,7 +236,26 @@ export class CheckpointsController {
 
 				this.model.renameCheckpoint(checkpointNode.nodeId, result);
 			});
-    };
+	};
+	
+	/** 
+	 * Toggles the configuration showActiveFileOnly
+	 * and refreshed the tree view.
+	*/
+	private onToggleShowActiveFileOnly() {
+		let config = workspace.getConfiguration('checkpoints');
+		let currentConfigValue = config.get('showActiveFileOnly'); 
+		config.update('showActiveFileOnly', !currentConfigValue)
+			.then(
+			() => {
+				window.setStatusBarMessage(`Set showActiveFileOnly config to '${!currentConfigValue}'`, 5000)
+				this.treeView.refresh();
+			},
+			(err) => {
+				console.error(err);
+				window.showErrorMessage("Failed to toggle 'Show Active File Only'");
+			})
+	}
 
 	/**
 	 * Prompt the user with a modal before performing an action

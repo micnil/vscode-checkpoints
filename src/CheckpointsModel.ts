@@ -275,7 +275,8 @@ export class CheckpointsModel {
 			checkpointsIds = this.checkpointStore.checkpoints.allIds;
 		} else {
 			// All checkoints from a specific file
-			checkpointsIds = this.checkpointStore.files.byId[fileId].checkpointIds;
+			const file = this.checkpointStore.files.byId[fileId];
+			checkpointsIds = file ? file.checkpointIds : []; 
 		}
 
 		// Get the checkpoints by their ID
