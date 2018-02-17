@@ -11,9 +11,10 @@ import {
 	WorkspaceEdit,
 	Uri
 } from 'vscode';
-import { CheckpointsModel } from './CheckpointsModel';
+import { CheckpointsModel, ICheckpoint } from './CheckpointsModel';
 import { CheckpointsTreeView, CheckpointNode } from './CheckpointsTreeView';
 import { CheckpointsDocumentView } from './CheckpointsDocumentView';
+import * as path from 'path';
 
 export class CheckpointsController {
 	private activeEditor: TextEditor;
@@ -62,9 +63,6 @@ export class CheckpointsController {
 					},
 				);
 			}),
-		);
-
-		this.context.subscriptions.push(
 			commands.registerCommand('checkpoints.clearFile', checkpointNode => {
 				this.promptAreYouSure(`Are you sure you want to clear all checkpoints from file '${checkpointNode.nodeId}'?`,
 					() => {
@@ -72,9 +70,6 @@ export class CheckpointsController {
 					},
 				);
 			}),
-		);
-
-		this.context.subscriptions.push(
 			commands.registerCommand('checkpoints.clearAll', () => {
 				this.promptAreYouSure(`Are you sure you want to clear ALL checkpoints?`, () => {
 					this.model.remove();
@@ -159,12 +154,12 @@ export class CheckpointsController {
 		console.log(
 			`Restoring checkpoint: '${checkpointNode.label}', with id: '${checkpointNode.nodeId}'`,
 		);
-		
+
 		let textDocument: TextDocument; 	
 		let success: boolean;
 		try {
 			// Get the document to edit.
-			textDocument = await workspace.openTextDocument(checkpointNode.parentId);
+			textDocument = await this.openTextDocument(checkpointNode);
 
 			// Create a range spanning the entire content of the file
 			let lastLine = textDocument.lineAt(textDocument.lineCount - 1);
@@ -173,7 +168,7 @@ export class CheckpointsController {
 			// Create an edit job
 			let workspaceEdit = new WorkspaceEdit();
 			workspaceEdit.replace(
-				Uri.file(checkpointNode.parentId), 
+				textDocument.uri, 
 				documentRange, 
 				this.model.getCheckpoint(checkpointNode.nodeId).text
 			);
@@ -182,8 +177,14 @@ export class CheckpointsController {
 			success = await workspace.applyEdit(workspaceEdit);
 
 			if (success) {
-				textDocument.save();
-				window.showInformationMessage(`Restored '${textDocument.fileName}' to checkpoint '${checkpointNode.label}'`);
+				// Only save if this is not an untitled document
+				// (this happens if the original file is removed/replace/renamed)
+				if(!textDocument.isUntitled){
+					window.showInformationMessage(`Restored checkpoint '${checkpointNode.label}'`);		
+				} else {
+					window.showInformationMessage(`Restored '${textDocument.fileName}' to checkpoint '${checkpointNode.label}'`);
+					textDocument.save();
+				}
 			}
 		} catch (err) {
 			window.showErrorMessage(`Failed to restore file '${checkpointNode.parentId}': ${err.message}`);
@@ -262,8 +263,9 @@ export class CheckpointsController {
 			let textDocument = await workspace.openTextDocument(checkpointNode.parentId);
 			this.documentView.showDiff(textDocument.uri, checkpointNode.nodeId);
 		} catch (err) {
-			console.log(err);
+			console.error(err);
 			window.showErrorMessage(`Failed to show diff for ${checkpointNode.label}: ${err.message}`);
+			this.documentView.showPreview(checkpointNode.nodeId);
 		}
 	}
 	
@@ -284,6 +286,22 @@ export class CheckpointsController {
 				console.error(err);
 				window.showErrorMessage("Failed to toggle 'Show Active File Only'");
 			})
+	}
+
+	/**
+	 * Wrapper for workspace.openTextDocument that will
+	 * open an untitled (unsaved) text document if it has been removed.
+	 * @param filePath The absolute file path
+	 */
+	private async openTextDocument(checkpoint: CheckpointNode) {
+		try{
+			return await workspace.openTextDocument(checkpoint.parentId);
+		} catch (err) {
+			window.showWarningMessage("Failed to open original document, opening untitled document instead.")
+			return await workspace.openTextDocument({
+				content: this.model.getCheckpoint(checkpoint.nodeId).text,
+			});
+		}
 	}
 
 	/**
