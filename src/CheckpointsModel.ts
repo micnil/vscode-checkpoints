@@ -144,15 +144,14 @@ export class CheckpointsModel {
 	 * Adds the current state of the document to the current checkpoint context.
 	 * @param document The document to save
 	 */
-	add(document: TextDocument): void {
+	add(document: TextDocument, name: string, timestamp: number): void {
 		console.log(`Adding file '${document.fileName}' to checkpoint store.`);
 
 		if (document.isUntitled) {
 			console.log(`Failed to add file to store. Unsaved documents are currently not supported`);
-			window.showWarningMessage(`Add checkpoint failed. Untitled documents are currently not supported`);
-			return;
+			throw new Error("Untitled documents are currently not supported")
 		}
-
+		
 		// If there is no entry for this document, then create one
 		if (!this.checkpointStore.files.byId[document.fileName]) {
 
@@ -186,12 +185,11 @@ export class CheckpointsModel {
 		}
 
 		// create the checkpoint
-		let timestamp = Date.now();
 		let checkpoint: ICheckpoint = {
 			parent: document.fileName,
 			timestamp: timestamp,
 			text: document.getText(),
-			name: new Date(timestamp).toLocaleString(),
+			name: name,
 			id: timestamp.toString(),
 		}
 

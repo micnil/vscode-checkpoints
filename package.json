@@ -163,7 +163,23 @@
                 "mac": "cmd+alt+s",
                 "when": "editorTextFocus"
             }
-        ]
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Checkpoints configuration",
+            "properties": {
+                "checkpoints.locale": {
+                    "type": "string",
+                    "default": "en-GB",
+                    "description": "Specifies the date-time locale used for the default checkpoint names. Available options: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString"
+                },
+                "checkpoints.askForCheckpointName": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show a text input dialog when adding a new checkpoint to specify the checkpoint name. If disabled, the date-time value will be used."
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",

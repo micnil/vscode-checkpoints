@@ -48,20 +48,14 @@ export class CheckpointsController {
 		);
 
 		this.context.subscriptions.push(
-			workspace.registerTextDocumentContentProvider('checkpointsDocumentView',
+			workspace.registerTextDocumentContentProvider(
+				'checkpointsDocumentView',
 				this.documentView,
 			),
 		);
 
 		// Register commands
 		// =================
-
-		this.context.subscriptions.push(
-			commands.registerCommand('checkpoints.addCheckpoint', () => {
-				this.model.add(this.activeEditor.document);
-			}),
-		);
-
 		this.context.subscriptions.push(
 			commands.registerCommand('checkpoints.refresh', () => {
 				this.treeView.refresh();
@@ -103,14 +97,66 @@ export class CheckpointsController {
 		);
 
 		this.context.subscriptions.push(
+			commands.registerCommand('checkpoints.addCheckpoint', this.onAddCheckpoint, this),
 			commands.registerCommand('checkpoints.restoreCheckpoint', this.onRestoreCheckpoint, this),
-		);
-		this.context.subscriptions.push(
 			commands.registerCommand('checkpoints.openFile', this.onOpenFile, this),
+			commands.registerCommand('checkpoints.renameCheckpoint', this.onRenameCheckpoint, this)
 		);
-		this.context.subscriptions.push(
-			commands.registerCommand('checkpoints.renameCheckpoint', this.onRenameCheckpoint, this),
-		);
+	}
+
+	/** 
+	 * Tries to add a new checkpoint from the current document to
+	 * the checkpoint model.
+	*/
+	private onAddCheckpoint() {
+		const config = workspace.getConfiguration('checkpoints');
+		
+		const timestamp = Date.now();
+		
+		// create default name
+		let locale: string = config.get('locale');
+		const defaultName = new Date(timestamp).toLocaleString(locale);
+		
+		// If "ask for checkpoint name" is disabled, use default name.
+		if (config.get('askForCheckpointName') === false) {
+			try {
+				this.model.add(this.activeEditor.document, defaultName, timestamp);
+				this.activeEditor.document.save();
+				window.showInformationMessage(`Added checkpoint '${defaultName}' `)
+			} catch (err) {
+				window.showErrorMessage(`Add checkpoint failed: ${err.message}`)
+			} finally {
+				return;
+			}
+		}
+
+		// Ask the user for a checkpoint name
+		window.showInputBox({
+			ignoreFocusOut: true,
+			prompt: 'Give your checkpoint a name.',
+			value: defaultName,
+			valueSelection: undefined,
+		})
+		.then(result => {
+
+			if (result === undefined) {
+				console.log(`Add checkpoint canceled`);
+				return;
+			}
+
+			// User provided no name.
+			if (result === "") {
+				result = "Untitled"
+			}
+			
+			try {
+				this.model.add(this.activeEditor.document, result, timestamp);
+				this.activeEditor.document.save();
+				window.showInformationMessage(`Added checkpoint '${result}' `)
+			} catch (err) {
+				window.showErrorMessage(`Add checkpoint failed: ${err.message}`)
+			}
+		});
 	}
 
 	/**
@@ -141,7 +187,10 @@ export class CheckpointsController {
 			editorBuilder.replace(
 				documentRange,
 				this.model.getCheckpoint(checkpointNode.nodeId).text,
-			);
+            );
+            
+            // Save the document
+            this.activeEditor.document.save();
 		});
 	};
 
@@ -160,7 +209,7 @@ export class CheckpointsController {
 					preview: true,
 				});
 			},
-			// on failure:
+			// On failure:
 			error => {
 				window.showErrorMessage(`Cannot open file ${checkpointNode.nodeId}.`);
 				console.error(error.message);
