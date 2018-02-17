@@ -101,8 +101,8 @@ export class CheckpointsModel {
 		return this.onDidRemoveCheckpointEmitter.event;
 	}
 
-	private onDidChangeCheckpointContextEmitter = new EventEmitter<string>();
-	get onDidChangeCheckpointContext(): Event<string> {
+	private onDidChangeCheckpointContextEmitter = new EventEmitter<Uri>();
+	get onDidChangeCheckpointContext(): Event<Uri> {
 		return this.onDidChangeCheckpointContextEmitter.event;
 	}
 
@@ -113,7 +113,7 @@ export class CheckpointsModel {
 
 	// Fields
 	private checkpointStore: ICheckpointStore;
-    private currentCheckpointContext: string;
+    private currentCheckpointContext: Uri;
 	private context: ExtensionContext;
 	private readonly maxLengthFileName: 15; 
 
@@ -126,21 +126,23 @@ export class CheckpointsModel {
 
 	/**
 	 * Sets a new checkpoint context you want the tree view to operate on.
-	 * @param fileName The full path file
+	 * @param fileUri The file's uri
 	 */
-	set checkpointContext(fileName: string) {
+	set checkpointContext(fileUri: Uri) {
 
 		// Save the key to the current checkpoint
-		this.currentCheckpointContext = fileName;
+		this.currentCheckpointContext = fileUri;
 
-		// Fire the event
-        this.onDidChangeCheckpointContextEmitter.fire(this.currentCheckpointContext);
+		// Fire the event if this is not the checkpoints document view.
+		if (fileUri.scheme !== 'checkpointsDocumentView') {
+			this.onDidChangeCheckpointContextEmitter.fire(this.currentCheckpointContext);
+		}
 	}
 
 	/**
 	 * gets the checkpoint context the tree view should operate on (current open file)
 	 */
-	get checkpointContext(): string {
+	get checkpointContext(): Uri {
 		return this.currentCheckpointContext;
 	}
 

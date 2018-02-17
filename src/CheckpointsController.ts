@@ -33,14 +33,14 @@ export class CheckpointsController {
 		}
 
 		// initial selection of slot context.
-		this.model.checkpointContext = this.activeEditor.document.fileName;
+		this.model.checkpointContext = this.activeEditor.document.uri;
 
 		// Update the active editor on when it changes
 		this.context.subscriptions.push(
 			window.onDidChangeActiveTextEditor(
 				editor => {
 					this.activeEditor = editor;
-					this.model.checkpointContext = this.activeEditor.document.fileName;
+					this.model.checkpointContext = this.activeEditor.document.uri;
 				},
 				null,
 				this.context.subscriptions,
@@ -179,7 +179,7 @@ export class CheckpointsController {
 			if (success) {
 				// Only save if this is not an untitled document
 				// (this happens if the original file is removed/replace/renamed)
-				if(!textDocument.isUntitled){
+				if (textDocument.isUntitled) {
 					window.showInformationMessage(`Restored checkpoint '${checkpointNode.label}'`);		
 				} else {
 					window.showInformationMessage(`Restored '${textDocument.fileName}' to checkpoint '${checkpointNode.label}'`);
@@ -193,7 +193,7 @@ export class CheckpointsController {
 		}
 
 		// The file is not open in the currently active editor, open it.
-		if (success && checkpointNode.parentId !== this.model.checkpointContext) {
+		if (success && checkpointNode.parentId !== this.model.checkpointContext.fsPath) {
 			let editor = await window.showTextDocument(textDocument, {
 				preserveFocus: false,
 				preview: true,
@@ -218,8 +218,14 @@ export class CheckpointsController {
 			},
 			// On failure:
 			error => {
-				window.showErrorMessage(`Cannot open file ${checkpointNode.nodeId}.`);
+				window.showErrorMessage(
+					`Cannot open file ${
+						checkpointNode.nodeId
+					}, showing preview of most recent checkpoint instead`
+				);
 				console.error(error.message);
+				let allCheckpoints: ICheckpoint[] = this.model.getCheckpoints(checkpointNode.nodeId);
+				this.documentView.showPreview(allCheckpoints[0].id);
 			},
 		);
 	};
