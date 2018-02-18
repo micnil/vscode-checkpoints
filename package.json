@@ -1,6 +1,6 @@
 {
     "name": "vscode-checkpoints",
-    "displayName": "Code Checkpoints",
+    "displayName": "Checkpoints",
     "description": "Checkpoints for your code editing.",
     "version": "0.0.1",
     "publisher": "micnil",
@@ -13,6 +13,11 @@
     },
     "bugs": {
         "url": "https://github.com/micnil/vscode-checkpoints/issues"
+    },
+    "icon": "resources/icon.png",
+    "galleryBanner": {
+        "color": "#ffffff",
+        "theme": "light"
     },
     "categories": [
         "Other"
