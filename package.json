@@ -31,6 +31,7 @@
     ],
     "activationEvents": [
         "onCommand:checkpoints.addCheckpoint",
+        "onCommand:checkpoints.toggleTreeView",
         "onView:checkpointsTreeView"
     ],
     "main": "./out/extension",
@@ -39,7 +40,8 @@
             "explorer": [
                 {
                     "id": "checkpointsTreeView",
-                    "name": "Checkpoints"
+                    "name": "Checkpoints",
+                    "when": "config.checkpoints.showTreeView"
                 }
             ]
         },
@@ -81,8 +83,8 @@
                 "title": "Rename Checkpoint"
             },
             {
-                "command": "checkpoints.diffToCurrent",
-                "title": "Diff To Current"
+                "command": "checkpoints.diffWithCurrent",
+                "title": "Diff With Current"
             },
             {
                 "command": "checkpoints.openFile",
@@ -91,6 +93,23 @@
             {
                 "command": "checkpoints.toggleTreeViewContext",
                 "title": "Toggle Show Active File Only"
+            },
+            {
+                "command": "checkpoints.selectCheckpoint",
+                "title": "Select"
+            },
+            {
+                "command": "checkpoints.deselectCheckpoint",
+                "title": "Deselect"
+            },
+            {
+                "command": "checkpoints.diffWithSelection",
+                "title": "Diff with selection"
+            },
+            {
+                "command": "checkpoints.toggleTreeView",
+                "title": "Show/Hide Tree View (will reload)",
+                "category": "Checkpoints"
             }
         ],
         "menus": {
@@ -124,7 +143,7 @@
                     "when": "false"
                 },
                 {
-                    "command": "checkpoints.diffToCurrent",
+                    "command": "checkpoints.diffWithCurrent",
                     "when": "false"
                 },
                 {
@@ -133,6 +152,18 @@
                 },
                 {
                     "command": "checkpoints.toggleTreeViewContext",
+                    "when": "false"
+                },
+                {
+                    "command": "checkpoints.selectCheckpoint",
+                    "when": "false"
+                },
+                {
+                    "command": "checkpoints.deselectCheckpoint",
+                    "when": "false"
+                },
+                {
+                    "command": "checkpoints.diffWithSelection",
                     "when": "false"
                 }
             ],
@@ -178,9 +209,44 @@
                     "group": "2_modification@1"
                 },
                 {
-                    "command": "checkpoints.diffToCurrent",
+                    "command": "checkpoints.diffWithCurrent",
                     "when": "view == checkpointsTreeView && viewItem == checkpoint",
-                    "group": "1_compare"
+                    "group": "1_compare@1"
+                },
+                {
+                    "command": "checkpoints.deleteCheckpoint",
+                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "group": "2_modification@3"
+                },
+                {
+                    "command": "checkpoints.restoreCheckpoint",
+                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "group": "2_modification@2"
+                },
+                {
+                    "command": "checkpoints.renameCheckpoint",
+                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "group": "2_modification@1"
+                },
+                {
+                    "command": "checkpoints.diffWithCurrent",
+                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "group": "1_compare@1"
+                },
+                {
+                    "command": "checkpoints.diffWithSelection",
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "group": "1_compare@2"
+                },
+                {
+                    "command": "checkpoints.selectCheckpoint",
+                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "group": "1_compare@3"
+                },
+                {
+                    "command": "checkpoints.deselectCheckpoint",
+                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "group": "1_compare@4"
                 }
             ]
         },
@@ -220,6 +286,11 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Determines if only the active file should be visible in the tree explorer or not."
+                },
+                "checkpoints.showTreeView": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Determines whether to show the tree view or not (requires reload)."
                 }
             }
         }

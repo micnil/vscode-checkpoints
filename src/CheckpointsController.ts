@@ -75,12 +75,33 @@ export class CheckpointsController {
 					this.model.remove();
 				});
 			}),
+			commands.registerCommand('checkpoints.selectCheckpoint', (checkpointNode) => {
+				this.model.selectCheckpoint(checkpointNode.nodeId);
+			}),
+			commands.registerCommand('checkpoints.deselectCheckpoint', (checkpointNode) => {
+				this.model.clearSelectionFromFile(checkpointNode.parentId);
+			}),
+			commands.registerCommand('checkpoints.toggleTreeView', () => {
+				let config = workspace.getConfiguration('checkpoints');
+				let currentConfigValue = config.get('showTreeView'); 
+				config.update('showTreeView', !currentConfigValue)
+					.then(
+					() => {
+						window.setStatusBarMessage(`Set showTreeView config to '${!currentConfigValue}'`, 5000)
+						commands.executeCommand("workbench.action.reloadWindow");
+					},
+					(err) => {
+						console.error(err);
+						window.showErrorMessage("Failed to toggle 'Show Active File Only'");
+					})
+			})
 		);
 
 		this.context.subscriptions.push(
 			commands.registerCommand('checkpoints.refresh', this.treeView.refresh, this.treeView),
 			commands.registerCommand('checkpoints.addCheckpoint', this.onAddCheckpoint, this),
-			commands.registerCommand('checkpoints.diffToCurrent', this.onDiffToCurrent, this),
+			commands.registerCommand('checkpoints.diffWithCurrent', this.onDiffWithCurrent, this),
+			commands.registerCommand('checkpoints.diffWithSelection', this.onDiffWithSelection, this),
 			commands.registerCommand('checkpoints.restoreCheckpoint', this.onRestoreCheckpoint, this),
 			commands.registerCommand('checkpoints.openFile', this.onOpenFile, this),
 			commands.registerCommand('checkpoints.renameCheckpoint', this.onRenameCheckpoint, this),
@@ -264,15 +285,30 @@ export class CheckpointsController {
 	 * Gets the text document passes it to the diff view.
 	 * @param checkpointNode Checkpoint node to diff against
 	 */
-	private async onDiffToCurrent(checkpointNode: CheckpointNode) {
+	private async onDiffWithCurrent(checkpointNode: CheckpointNode) {
 		try {
 			let textDocument = await workspace.openTextDocument(checkpointNode.parentId);
-			this.documentView.showDiff(textDocument.uri, checkpointNode.nodeId);
+			this.documentView.showDiffWithDocument(textDocument.uri, checkpointNode.nodeId);
 		} catch (err) {
 			console.error(err);
 			window.showErrorMessage(`Failed to show diff for ${checkpointNode.label}: ${err.message}`);
 			this.documentView.showPreview(checkpointNode.nodeId);
 		}
+	}
+
+	/**
+	 * Shows a diff between the checkpoint marked as selected and the checkpoint
+	 * that this command was triggered by.
+	 * @param checkpointNode Checkpoint node that this command was triggered by
+	 */
+	private onDiffWithSelection(checkpointNode: CheckpointNode): void {
+		const file = this.model.getFile(checkpointNode.parentId);
+		if (file.selection === '') {
+			window.showInformationMessage('Please mark a checkpoint as selected first.');
+			return;
+		}
+
+		this.documentView.showDiffWithCheckpoint(checkpointNode.nodeId, file.selection);
 	}
 	
 	/** 

@@ -114,11 +114,24 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 
 		}
 
+		
 		// checkpoint nodes
 		let checkpoint = this.model.getCheckpoint(element.nodeId);
 		element.collapsibleState = TreeItemCollapsibleState.None;
-		element.contextValue = 'checkpoint';
 		element.label = checkpoint.name;
+
+		// Set the correct context value and icon
+		let parentFile: IFile = this.model.getFile(element.parentId);
+		if(parentFile && parentFile.selection == element.nodeId) {
+			element.iconPath = {
+				light: this.context.asAbsolutePath('resources/light/check.svg'),
+				dark: this.context.asAbsolutePath('resources/dark/check.svg'),
+			};
+			element.contextValue = 'selectedCheckpoint';
+		} else {
+			element.contextValue = 'checkpoint';
+		}
+
 		return element;
 	}
 

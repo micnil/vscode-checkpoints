@@ -59,7 +59,13 @@ export interface IFile {
 	 * The list of checkpoint IDs that
 	 * belong to this file.
 	*/
-	checkpointIds: string[];
+	checkpointIds: string[],
+
+	/** 
+	 * The selected checkpoint id 
+	 *
+	*/
+	selection: string,
 }
 
 /** 
@@ -76,6 +82,7 @@ export interface ICheckpointStore {
 		};
 		allIds: string[],
 	}
+
 	checkpoints: {
 		byId: {
 			// Any number of string IDs with Checkpoint values
@@ -113,7 +120,7 @@ export class CheckpointsModel {
 
 	// Fields
 	private checkpointStore: ICheckpointStore;
-    private currentCheckpointContext: Uri;
+	private currentCheckpointContext: Uri;
 	private context: ExtensionContext;
 	private readonly maxLengthFileName: 15; 
 
@@ -187,7 +194,8 @@ export class CheckpointsModel {
 				name: baseName,
 				extraName: extraName,
 				fileNameDuplicates: [],
-				checkpointIds: []
+				checkpointIds: [],
+				selection: ''
 			}
 
 			this.handleNewDuplicates(file);
@@ -311,6 +319,43 @@ export class CheckpointsModel {
 		let checkpoint: ICheckpoint = this.getCheckpoint(id);
 		checkpoint.name = newName;
 		this.onDidUpdateItemEmitter.fire(checkpoint);
+	}
+
+	/**
+	 * Marks the given checkpoint as selected in the 
+	 * files store. Only one checkpoint can be selected
+	 * at a time.
+	 * @param id id of the checkpoint
+	 */
+	public selectCheckpoint(checkpointId: string): void {
+		console.log(`Selecting checkpoint with id: ${checkpointId}`);
+		const checkpoint = this.getCheckpoint(checkpointId);
+
+		if (!checkpoint) {
+			console.error(`Selection failed: checkpoint not found`);
+			return;
+		}
+
+		let file = this.checkpointStore.files.byId[checkpoint.parent]; 
+		file.selection = checkpoint.id;
+		this.onDidUpdateItemEmitter.fire(file)
+	}
+
+	/**
+	 * Clears the selected checkpoint from the file.
+	 * @param fileId the file id
+	 */
+	public clearSelectionFromFile(fileId: string): void {
+		console.log(`Clearing checkpoint selection from file with id: ${fileId}`);
+		let file = this.getFile(fileId);
+
+		if (!file) {
+			console.error(`Clear selection failed: file not found`);
+			return;
+		}
+
+		file.selection = '';
+		this.onDidUpdateItemEmitter.fire(file)
 	}
 
 	/**
