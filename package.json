@@ -1,7 +1,7 @@
 {
     "name": "vscode-checkpoints",
     "displayName": "Checkpoints",
-    "description": "Checkpoints for your code editing.",
+    "description": "Checkpoints used in between commits for keeping a local short-term history of work in progress files, like bookmarks in you undo-stack.",
     "version": "0.0.1",
     "publisher": "micnil",
     "engines": {
