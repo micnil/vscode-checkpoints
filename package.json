@@ -56,7 +56,8 @@
             },
             {
                 "command": "checkpoints.addCheckpoint",
-                "title": "Add Checkpoint"
+                "title": "Add Checkpoint",
+                "category": "Checkpoints"
             },
             {
                 "command": "checkpoints.clearFile",
@@ -116,10 +117,6 @@
             "commandPalette": [
                 {
                     "command": "checkpoints.refresh",
-                    "when": "false"
-                },
-                {
-                    "command": "checkpoints.addCheckpoint",
                     "when": "false"
                 },
                 {
