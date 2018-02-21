@@ -386,6 +386,12 @@ export class CheckpointsModel {
 			return checkpoint;
 		}
 
+		// If this is the selected checkpoint in the file,
+		// remove the reference to it.
+		if (file.selection === id) {
+			file.selection = '';
+		}
+
 		// Remove the checkpoint reference from the file
 		file.checkpointIds = file.checkpointIds.filter( id => id !== checkpoint.id);
 
