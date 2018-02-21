@@ -137,13 +137,19 @@ export class CheckpointsModel {
 	 */
 	set checkpointContext(fileUri: Uri) {
 
+		// If this uri is already set, or if the new uri 
+		// is the custom diff view (CheckPointsDocumentView), 
+		// then return. We do not want to update the tree view in 
+		// these cases because we loose selection marker unnecessarily.
+		if (this.currentCheckpointContext && 
+			(this.currentCheckpointContext.fsPath === fileUri.fsPath ||
+			fileUri.scheme === 'checkpointsDocumentView')) {
+			return;
+		}
+
 		// Save the key to the current checkpoint
 		this.currentCheckpointContext = fileUri;
-
-		// Fire the event if this is not the checkpoints document view.
-		if (fileUri.scheme !== 'checkpointsDocumentView') {
-			this.onDidChangeCheckpointContextEmitter.fire(this.currentCheckpointContext);
-		}
+		this.onDidChangeCheckpointContextEmitter.fire(this.currentCheckpointContext);
 	}
 
 	/**
