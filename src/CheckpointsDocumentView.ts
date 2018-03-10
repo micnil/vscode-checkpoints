@@ -47,7 +47,7 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 			return;
 		}
 		const checkpointUri = this.getCheckpointUri(checkpoint);
-		const comparingDocumentName = path.basename(checkpointUri.fsPath);
+		const comparingDocumentName = path.basename(checkpointUri.toString());
 		const diffTitle = `${comparingDocumentName}<->${checkpoint.name}`;
 		commands.executeCommand('vscode.diff', comparisonDocumentUri, checkpointUri, diffTitle);
 	}
@@ -115,7 +115,7 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 	 * @param checkpoint The checkpoint
 	 */
 	private getCheckpointUri(checkpoint: ICheckpoint): Uri {
-		const filePath = Uri.file(checkpoint.parent);
+		const filePath = Uri.parse(checkpoint.parent);
 
 		// Set the checkpoint id to be the 'fragment' of the uri.
 		// The uri's 'path' part needs to be a file (fake or not) that has the
