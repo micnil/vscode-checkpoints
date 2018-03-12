@@ -448,7 +448,7 @@ export class CheckpointsModel {
 	 * @param checkpointStore the checkpoint store
 	 */
 	private updateWorkspaceState(checkpointStore: ICheckpointStore) {
-		this.context.workspaceState.update("checkpointsStore", this.checkpointStore)
+		this.context.workspaceState.update("checkpointsStore", checkpointStore)
 			.then( success => {
 				
 				if(!success){
