@@ -532,6 +532,7 @@ export class CheckpointsModel {
 		// it is the first version of the store. Correct the changes
 		// that has been made since.
 		if (!checkpointStore.version) {
+			console.log("Updating the checkpoint store state to version 1")
 			// The ID of the files were changed
 			// from the file's fsPath to the files
 			// URI.toString(). Convert all current file
@@ -571,6 +572,7 @@ export class CheckpointsModel {
 			// Update version number.
 			checkpointStore.version = 1;
 			this.updateWorkspaceState(checkpointStore);
+			console.log("Checkpoint store state updated")
 		}
 
 		return checkpointStore;
