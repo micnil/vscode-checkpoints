@@ -147,7 +147,7 @@ export class CheckpointsModel {
 		// then return. We do not want to update the tree view in 
 		// these cases because we loose selection marker unnecessarily.
 		if (this.currentCheckpointContext && 
-			(this.currentCheckpointContext.fsPath === fileUri.fsPath ||
+			(this.currentCheckpointContext.toString() === fileUri.toString() ||
 			fileUri.scheme === 'checkpointsDocumentView')) {
 			return;
 		}
@@ -176,19 +176,14 @@ export class CheckpointsModel {
 	 * @param document The document to save
 	 */
 	add(document: TextDocument, name: string, timestamp: number): void {
-		console.log(`Adding file '${document.fileName}' to checkpoint store.`);
+		const documentId = document.uri.toString();
+		console.log(`Adding file '${documentId}' to checkpoint store.`);
 		
+
 		// If there is no entry for this document, then create one
-		if (!this.checkpointStore.files.byId[document.fileName]) {
-
-			// Set file name and extra name (truncated relative path)
-
-			// First create an uri object of the file path
-			let fileUri = Uri.file(document.fileName);
-			// Get the relative path from workspace root to the file. 
-			let relativeFilePath = workspace.asRelativePath(fileUri);
+		if (!this.checkpointStore.files.byId[documentId]) {
 			// Remove the active file name and use as extra name.
-			let extraName = path.dirname(relativeFilePath);
+			let extraName = path.dirname(documentId);
 			// Truncate the name if it is too long
 			if (extraName.length > this.maxLengthFileName) {
 				extraName = '...' + extraName.substr(
@@ -197,11 +192,11 @@ export class CheckpointsModel {
 				);
 			}
 
-			let baseName = path.basename(document.fileName);
+			let baseName = path.basename(documentId);
 
 			// create the file
 			let file: IFile = {
-				id: document.fileName,
+				id: documentId,
 				name: baseName,
 				extraName: extraName,
 				fileNameDuplicates: [],
@@ -216,7 +211,7 @@ export class CheckpointsModel {
 
 		// create the checkpoint
 		let checkpoint: ICheckpoint = {
-			parent: document.fileName,
+			parent: documentId,
 			timestamp: timestamp,
 			text: document.getText(),
 			name: name,

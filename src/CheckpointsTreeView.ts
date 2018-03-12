@@ -63,12 +63,12 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 			// Control the collapsed state of the file. We want it to expand when the file is selected
 			// and collapse when it is not selected.
 			element.collapsibleState =
-				this.model.checkpointContext.fsPath === file.id
+				this.model.checkpointContext.toString() === file.id
 					? TreeItemCollapsibleState.Expanded
 					: TreeItemCollapsibleState.Collapsed;
 
 			// Set the file icon
-			if (this.model.checkpointContext.fsPath === file.id) {
+			if (this.model.checkpointContext.toString() === file.id) {
 				element.iconPath = {
 					light: this.context.asAbsolutePath('resources/light/file-selected.svg'),
 					dark: this.context.asAbsolutePath('resources/dark/file-selected.svg'),
@@ -149,7 +149,7 @@ export class CheckpointsTreeView implements TreeDataProvider<CheckpointNode> {
 		// that belong to the currently active file only, return checkpoint
 		// nodes.
 		if (!element && showActiveFileOnly) {
-			let checkpoints = this.model.getCheckpoints(this.model.checkpointContext.fsPath);
+			let checkpoints = this.model.getCheckpoints(this.model.checkpointContext.toString());
 			return checkpoints.map(checkpoint => {
 				return new CheckpointNode(checkpoint.id, checkpoint.parent);
 			});

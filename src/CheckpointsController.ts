@@ -115,7 +115,7 @@ export class CheckpointsController {
 	*/
 	private async onAddCheckpoint() {
 
-		if (this.activeEditor.document.isUntitled) {
+		if (this.activeEditor.document.uri.scheme === "untitled") {
 			console.log(`Failed to add file to store. Unsaved documents are currently not supported`);
 			window.showInformationMessage("Untitled documents are currently not supported");
 			return;
@@ -203,7 +203,7 @@ export class CheckpointsController {
 				if (textDocument.isUntitled) {
 					window.showInformationMessage(`Restored checkpoint '${checkpointNode.label}'`);		
 				} else {
-					window.showInformationMessage(`Restored '${textDocument.fileName}' to checkpoint '${checkpointNode.label}'`);
+					window.showInformationMessage(`Restored '${checkpointNode.id}' to checkpoint '${checkpointNode.label}'`);
 					textDocument.save();
 				}
 			}
@@ -214,7 +214,7 @@ export class CheckpointsController {
 		}
 
 		// The file is not open in the currently active editor, open it.
-		if (success && checkpointNode.parentId !== this.model.checkpointContext.fsPath) {
+		if (success && checkpointNode.parentId !== this.model.checkpointContext.toString()) {
 			let editor = await window.showTextDocument(textDocument, {
 				preserveFocus: false,
 				preview: true,
@@ -229,7 +229,7 @@ export class CheckpointsController {
 	private onOpenFile(checkpointNode: CheckpointNode) {
 		console.log(`Opening file: '${checkpointNode.nodeId}'`);
 
-		workspace.openTextDocument(checkpointNode.nodeId).then(
+		workspace.openTextDocument(Uri.parse(checkpointNode.nodeId)).then(
 			// On success:
 			textDocument => {
 				window.showTextDocument(textDocument, {
@@ -287,7 +287,7 @@ export class CheckpointsController {
 	 */
 	private async onDiffWithCurrent(checkpointNode: CheckpointNode) {
 		try {
-			let textDocument = await workspace.openTextDocument(checkpointNode.parentId);
+			let textDocument = await workspace.openTextDocument(Uri.parse(checkpointNode.parentId));
 			this.documentView.showDiffWithDocument(textDocument.uri, checkpointNode.nodeId);
 		} catch (err) {
 			console.error(err);
@@ -337,7 +337,7 @@ export class CheckpointsController {
 	 */
 	private async openTextDocument(checkpoint: CheckpointNode) {
 		try{
-			return await workspace.openTextDocument(checkpoint.parentId);
+			return await workspace.openTextDocument(Uri.parse(checkpoint.parentId));
 		} catch (err) {
 			window.showWarningMessage("Failed to open original document, opening untitled document instead.")
 			return await workspace.openTextDocument({
