@@ -75,6 +75,11 @@ export interface IFile {
  * be JSON serializable.
 */
 export interface ICheckpointStore {
+	// The version of the checkpoint store data structure.
+	// Should be bumped and handled when breaking changes
+	// are introduced in the store compared with earlier 
+	// versions. 
+	version: number,
     files: {
 		byId: {
 			// Any number of string IDs with File values
@@ -127,8 +132,8 @@ export class CheckpointsModel {
 	constructor(context: ExtensionContext) {
 		this.context = context;
 
-		// Initialize the checkpoints map from workspace state or empty.
-		this.checkpointStore = this.context.workspaceState.get("checkpointsStore", this.createEmptyStore());
+		// Initialize the checkpoints map from workspace state
+		this.checkpointStore = this.getWorkspaceSate();
 	}
 
 	/**
@@ -513,6 +518,7 @@ export class CheckpointsModel {
 	*/
 	private createEmptyStore(): ICheckpointStore {
 		return {
+			version: 1,
 			files: {
 				byId: {},
 				allIds: []
@@ -522,5 +528,56 @@ export class CheckpointsModel {
 				allIds: []				
 			}
 		}
+	}
+
+	private getWorkspaceSate(): ICheckpointStore {
+		let checkpointStore = this.context.workspaceState.get("checkpointsStore", this.createEmptyStore());
+
+		// If the saved store does not have a version number,
+		// it is the first version of the store. Correct the changes
+		// that has been made since.
+		if (!checkpointStore.version) {
+			// The ID of the files were changed
+			// from the file's fsPath to the files
+			// URI.toString(). Convert all current file
+			// IDs to the new format.
+			let { files } = checkpointStore;
+			files.allIds = files.allIds.map(id => {
+				try {
+					// Get the new id
+					let newId = Uri.file(id).toString();
+
+					// create a new entry for new version of the file
+					files.byId[newId] = files.byId[id];
+					files.byId[newId].id = newId;
+
+					// delete the old version
+					delete files.byId[id];
+					return newId;
+				} catch (err) {
+					// log error and continue
+					console.error(`Failed to convert file id '${id}' to new format: ${err}`);
+					return id;
+				}
+			})
+
+			let { checkpoints } = checkpointStore;
+			for(let id of checkpoints.allIds) {
+				try {
+					let parentId = checkpoints.byId[id].parent;
+					let newParentId = Uri.file(parentId).toString();
+					checkpoints.byId[id].parent = newParentId;
+				} catch (err) {
+					// just continue. If this failed, then the conversion above
+					// must have failed also, and we have logged the error.
+				}
+			}
+
+			// Update version number.
+			checkpointStore.version = 1;
+			this.updateWorkspaceState(checkpointStore);
+		}
+
+		return checkpointStore;
 	}
 }
