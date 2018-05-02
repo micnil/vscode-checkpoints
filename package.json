@@ -25,7 +25,7 @@
     "keywords": [
         "checkpoints",
         "stash",
-        "save",
+        "local history",
         "backup",
         "history"
     ],
@@ -300,9 +300,9 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^2.7.1",
-        "vscode": "^1.1.10",
-        "@types/node": "^9.4.4",
-        "@types/mocha": "^2.2.48"
+        "typescript": "^2.8.3",
+        "vscode": "^1.1.17",
+        "@types/node": "^10.0.3",
+        "@types/mocha": "^5.2.0"
     }
 }
