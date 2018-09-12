@@ -39,6 +39,7 @@ export class CheckpointsController {
 		this.context.subscriptions.push(
 			window.onDidChangeActiveTextEditor(
 				editor => {
+					// TODO: Do something about document undefined.
 					this.activeEditor = editor;
 					this.model.checkpointContext = this.activeEditor.document.uri;
 				},

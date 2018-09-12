@@ -105,7 +105,7 @@
             },
             {
                 "command": "checkpoints.diffWithSelection",
-                "title": "Diff with selection"
+                "title": "Diff With Selection"
             },
             {
                 "command": "checkpoints.toggleTreeView",
