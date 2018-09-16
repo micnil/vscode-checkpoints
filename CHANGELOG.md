@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.1.1
+## 1.2.0
 - Show checkpoints panel in source control sidebar (with configuration `checkpoints.showCheckpointsInScm`).
 
 ## 1.1.0
