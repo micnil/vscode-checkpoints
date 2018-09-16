@@ -20,7 +20,7 @@
         "theme": "light"
     },
     "categories": [
-        "Other"
+        "Other", "SCM Providers"
     ],
     "keywords": [
         "checkpoints",
@@ -32,16 +32,24 @@
     "activationEvents": [
         "onCommand:checkpoints.addCheckpoint",
         "onCommand:checkpoints.toggleTreeView",
-        "onView:checkpointsTreeView"
+        "onView:checkpointsTreeViewExplorer",
+        "onView:checkpointsTreeViewScm"
     ],
     "main": "./out/extension",
     "contributes": {
         "views": {
+            "scm": [
+                {
+                    "id": "checkpointsTreeViewScm",
+                    "name": "Checkpoints",
+                    "when": "config.checkpoints.showCheckpointsInScm"
+                }
+            ],
             "explorer": [
                 {
-                    "id": "checkpointsTreeView",
+                    "id": "checkpointsTreeViewExplorer",
                     "name": "Checkpoints",
-                    "when": "config.checkpoints.showTreeView"
+                    "when": "config.checkpoints.showCheckpointsInExplorer"
                 }
             ]
         },
@@ -167,82 +175,160 @@
             "view/title": [
                 {
                     "command": "checkpoints.refresh",
-                    "when": "view == checkpointsTreeView",
+                    "when": "view == checkpointsTreeViewExplorer",
                     "group": "navigation"
                 },
                 {
                     "command": "checkpoints.clearAll",
-                    "when": "view == checkpointsTreeView",
+                    "when": "view == checkpointsTreeViewExplorer",
                     "group": "modify"
                 },
                 {
                     "command": "checkpoints.toggleTreeViewContext",
-                    "when": "view == checkpointsTreeView",
+                    "when": "view == checkpointsTreeViewExplorer",
+                    "group": "settings"
+                },
+                {
+                    "command": "checkpoints.refresh",
+                    "when": "view == checkpointsTreeViewScm",
+                    "group": "navigation"
+                },
+                {
+                    "command": "checkpoints.clearAll",
+                    "when": "view == checkpointsTreeViewScm",
+                    "group": "modify"
+                },
+                {
+                    "command": "checkpoints.toggleTreeViewContext",
+                    "when": "view == checkpointsTreeViewScm",
                     "group": "settings"
                 }
             ],
             "view/item/context": [
                 {
                     "command": "checkpoints.clearFile",
-                    "when": "view == checkpointsTreeView && viewItem == file"
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == file"
                 },
                 {
                     "command": "checkpoints.openFile",
-                    "when": "view == checkpointsTreeView && viewItem == file"
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == file"
                 },
                 {
                     "command": "checkpoints.deleteCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == checkpoint",
                     "group": "2_modification@3"
                 },
                 {
                     "command": "checkpoints.restoreCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == checkpoint",
                     "group": "2_modification@2"
                 },
                 {
                     "command": "checkpoints.renameCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == checkpoint",
                     "group": "2_modification@1"
                 },
                 {
                     "command": "checkpoints.diffWithCurrent",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == checkpoint",
                     "group": "1_compare@1"
                 },
                 {
                     "command": "checkpoints.deleteCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == selectedCheckpoint",
                     "group": "2_modification@3"
                 },
                 {
                     "command": "checkpoints.restoreCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == selectedCheckpoint",
                     "group": "2_modification@2"
                 },
                 {
                     "command": "checkpoints.renameCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == selectedCheckpoint",
                     "group": "2_modification@1"
                 },
                 {
                     "command": "checkpoints.diffWithCurrent",
-                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == selectedCheckpoint",
                     "group": "1_compare@1"
                 },
                 {
                     "command": "checkpoints.diffWithSelection",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == checkpoint",
                     "group": "1_compare@2"
                 },
                 {
                     "command": "checkpoints.selectCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == checkpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == checkpoint",
                     "group": "1_compare@3"
                 },
                 {
                     "command": "checkpoints.deselectCheckpoint",
-                    "when": "view == checkpointsTreeView && viewItem == selectedCheckpoint",
+                    "when": "view == checkpointsTreeViewExplorer && viewItem == selectedCheckpoint",
+                    "group": "1_compare@4"
+                },
+                {
+                    "command": "checkpoints.clearFile",
+                    "when": "view == checkpointsTreeViewScm && viewItem == file"
+                },
+                {
+                    "command": "checkpoints.openFile",
+                    "when": "view == checkpointsTreeViewScm && viewItem == file"
+                },
+                {
+                    "command": "checkpoints.deleteCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == checkpoint",
+                    "group": "2_modification@3"
+                },
+                {
+                    "command": "checkpoints.restoreCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == checkpoint",
+                    "group": "2_modification@2"
+                },
+                {
+                    "command": "checkpoints.renameCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == checkpoint",
+                    "group": "2_modification@1"
+                },
+                {
+                    "command": "checkpoints.diffWithCurrent",
+                    "when": "view == checkpointsTreeViewScm && viewItem == checkpoint",
+                    "group": "1_compare@1"
+                },
+                {
+                    "command": "checkpoints.deleteCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == selectedCheckpoint",
+                    "group": "2_modification@3"
+                },
+                {
+                    "command": "checkpoints.restoreCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == selectedCheckpoint",
+                    "group": "2_modification@2"
+                },
+                {
+                    "command": "checkpoints.renameCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == selectedCheckpoint",
+                    "group": "2_modification@1"
+                },
+                {
+                    "command": "checkpoints.diffWithCurrent",
+                    "when": "view == checkpointsTreeViewScm && viewItem == selectedCheckpoint",
+                    "group": "1_compare@1"
+                },
+                {
+                    "command": "checkpoints.diffWithSelection",
+                    "when": "view == checkpointsTreeViewScm && viewItem == checkpoint",
+                    "group": "1_compare@2"
+                },
+                {
+                    "command": "checkpoints.selectCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == checkpoint",
+                    "group": "1_compare@3"
+                },
+                {
+                    "command": "checkpoints.deselectCheckpoint",
+                    "when": "view == checkpointsTreeViewScm && viewItem == selectedCheckpoint",
                     "group": "1_compare@4"
                 }
             ]
@@ -284,10 +370,15 @@
                     "default": false,
                     "description": "Determines if only the active file should be visible in the tree explorer or not."
                 },
-                "checkpoints.showTreeView": {
+                "checkpoints.showCheckpointsInExplorer": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Determines whether to show the tree view or not (requires reload)."
+                    "description": "Determines whether to show the tree view in the file explorer or not (requires reload)."
+                },
+                "checkpoints.showCheckpointsInScm": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Determines whether to show the tree view in the source control or not (requires reload)."
                 }
             }
         }

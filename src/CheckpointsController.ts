@@ -49,7 +49,8 @@ export class CheckpointsController {
 		);
 
 		this.context.subscriptions.push(
-			window.registerTreeDataProvider('checkpointsTreeView', this.treeView),
+			window.registerTreeDataProvider('checkpointsTreeViewExplorer', this.treeView),
+			window.registerTreeDataProvider('checkpointsTreeViewScm', this.treeView),
 			workspace.registerTextDocumentContentProvider('checkpointsDocumentView', this.documentView),
 		);
 
@@ -83,18 +84,32 @@ export class CheckpointsController {
 				this.model.clearSelectionFromFile(checkpointNode.parentId);
 			}),
 			commands.registerCommand('checkpoints.toggleTreeView', () => {
-				let config = workspace.getConfiguration('checkpoints');
-				let currentConfigValue = config.get('showTreeView'); 
-				config.update('showTreeView', !currentConfigValue)
-					.then(
-					() => {
-						window.setStatusBarMessage(`Set showTreeView config to '${!currentConfigValue}'`, 5000)
-						commands.executeCommand("workbench.action.reloadWindow");
-					},
-					(err) => {
-						console.error(err);
-						window.showErrorMessage("Failed to toggle 'Show Active File Only'");
-					})
+
+				let options = [
+					{ label: 'File explorer', config: 'showCheckpointsInExplorer' }, 
+					{ label: 'Source control', config: 'showCheckpointsInScm' }
+				];
+				window.showQuickPick(options.map(option => option.label))
+					.then(selection => {
+						if (selection == undefined) {
+							return;
+						}
+
+						let optionToToggle = options.find(option => option.label == selection);
+
+						let config = workspace.getConfiguration('checkpoints');
+						let currentConfigValue = config.get(optionToToggle.config); 
+						config.update(optionToToggle.config, !currentConfigValue)
+							.then(
+							() => {
+								window.setStatusBarMessage(`Set ${optionToToggle.config} config to '${!currentConfigValue}'`, 5000)
+								commands.executeCommand("workbench.action.reloadWindow");
+							},
+							(err) => {
+								console.error(err);
+								window.showErrorMessage("Command 'Toggle Tree View' failed.");
+							})
+					});
 			})
 		);
 
