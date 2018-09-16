@@ -219,7 +219,7 @@ export class CheckpointsController {
 				if (textDocument.isUntitled) {
 					window.showInformationMessage(`Restored checkpoint '${checkpointNode.label}'`);		
 				} else {
-					window.showInformationMessage(`Restored '${checkpointNode.id}' to checkpoint '${checkpointNode.label}'`);
+					window.showInformationMessage(`Restored '${textDocument.fileName}' to checkpoint '${checkpointNode.label}'`);
 					textDocument.save();
 				}
 			}

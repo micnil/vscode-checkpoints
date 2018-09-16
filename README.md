@@ -15,7 +15,8 @@ Restore the file to the working state of a previous checkpoint.
 
 ## Extension Settings
 
-* `checkpoints.showTreeView`: show/hide the tree view, can be toggled with the command `Show/Hide Tree View` from the command palette.
+* `checkpoints.showCheckpointsInExplorer`: show/hide the checkpoints panel in file explorer, can be toggled with the command `Show/Hide Tree View` from the command palette.
+* `checkpoints.showCheckpointsInScm`: show/hide the checkpoints panel in source control, can be toggled with the command `Show/Hide Tree View` from the command palette.
 * `checkpoints.showActiveFileOnly`: Determines if only the active file should be visible in the tree explorer or not.
 * `checkpoints.autoOpenFile`: Determines whether selecting a file in the tree explorer will automatically open the document.
 * `checkpoints.autoSelectFile`: Determines whether a file item in the tree explorer will automatically expand/collapse when moving between files.

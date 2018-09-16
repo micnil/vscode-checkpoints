@@ -20,7 +20,8 @@
         "theme": "light"
     },
     "categories": [
-        "Other", "SCM Providers"
+        "Other",
+        "SCM Providers"
     ],
     "keywords": [
         "checkpoints",
@@ -391,9 +392,9 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^2.8.3",
-        "vscode": "^1.1.17",
-        "@types/node": "^10.0.3",
-        "@types/mocha": "^5.2.0"
+        "typescript": "^3.0.3",
+        "vscode": "^1.1.21",
+        "@types/node": "^10.9.4",
+        "@types/mocha": "^5.2.5"
     }
 }
