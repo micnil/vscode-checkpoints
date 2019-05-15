@@ -98,6 +98,16 @@ export interface ICheckpointStore {
 }
 
 /**
+ * Interface typegaurds
+ */
+export function isCheckpoint(candidate): candidate is ICheckpoint {
+	return candidate.parent !== undefined;
+}
+export function isFile(candidate): candidate is IFile {
+	return candidate.checkpointIds !== undefined;
+}
+
+/**
  * Maps all files to an array of checkpoints and updates storage
  */
 export class CheckpointsModel {

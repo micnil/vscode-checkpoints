@@ -39,7 +39,9 @@ export class CheckpointsController {
 		this.context.subscriptions.push(
 			window.onDidChangeActiveTextEditor(
 				editor => {
-					// TODO: Do something about document undefined.
+					if (!editor) {
+						return;
+					}
 					this.activeEditor = editor;
 					this.model.checkpointContext = this.activeEditor.document.uri;
 				},
@@ -103,7 +105,6 @@ export class CheckpointsController {
 							.then(
 							() => {
 								window.setStatusBarMessage(`Set ${optionToToggle.config} config to '${!currentConfigValue}'`, 5000)
-								commands.executeCommand("workbench.action.reloadWindow");
 							},
 							(err) => {
 								console.error(err);

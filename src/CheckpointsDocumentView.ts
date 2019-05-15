@@ -5,9 +5,9 @@ import {
 	Event,
 	EventEmitter,
 	commands,
-	window,
+	window
 } from 'vscode';
-import { CheckpointsModel, ICheckpoint } from './CheckpointsModel';
+import { CheckpointsModel, ICheckpoint, IFile, ICheckpointStore, isCheckpoint, isFile } from './CheckpointsModel';
 import * as path from 'path';
 
 export class CheckpointsDocumentView implements TextDocumentContentProvider {
@@ -19,11 +19,20 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 		this.context = context;
 
 		context.subscriptions.push(
-			model.onDidRemoveCheckpoint((checkpoint: ICheckpoint) => {
-				this._onDidChange.fire(this.getCheckpointUri(checkpoint));
+			model.onDidRemoveCheckpoint((removedItem: ICheckpoint | IFile | ICheckpointStore) => {
+				if (isCheckpoint(removedItem)){
+					this._onDidChange.fire(this.getCheckpointUri(removedItem));
+				} else if (isFile(removedItem)) {
+					this._onDidChange.fire(Uri.parse(removedItem.id));
+				}
 			}),
-			model.onDidUpdateItem((checkpoint: ICheckpoint) => {
-				this._onDidChange.fire(this.getCheckpointUri(checkpoint));
+			model.onDidUpdateItem((updatedItem: ICheckpoint | IFile) => {
+				if (isCheckpoint(updatedItem)){
+					this._onDidChange.fire(this.getCheckpointUri(updatedItem));
+				} else if (isFile(updatedItem)) {
+					// TODO: Throws when selecting checkpoints<??
+					this._onDidChange.fire(Uri.parse(updatedItem.id));
+				}
 			}),
 		);
 	}
@@ -107,7 +116,12 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 	public provideTextDocumentContent(uri: Uri): string {
 		let checkpointId = uri.fragment;
 		let checkpoint = this.model.getCheckpoint(checkpointId);
-		return checkpoint.text;
+		// Checkpoint was removed
+		if (checkpoint) {
+			return checkpoint.text;
+		} else {
+			console.warn("Checkpoint you are currently viewing has been removed.")
+		}
 	}
 
 	/**
