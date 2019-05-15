@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.2.0
+- Checkpoints panel can now only be shown in one sidebar (configurable with `checkpoints.location`).
+- Command to toggle the tree view was removed, this is now built in to vscode.
+- Better error handling.
+
 ## 1.1.0
 - Show checkpoints panel in source control sidebar (with configuration `checkpoints.showCheckpointsInScm`).
 
