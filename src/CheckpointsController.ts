@@ -51,8 +51,7 @@ export class CheckpointsController {
 		);
 
 		this.context.subscriptions.push(
-			window.registerTreeDataProvider('checkpointsTreeViewExplorer', this.treeView),
-			window.registerTreeDataProvider('checkpointsTreeViewScm', this.treeView),
+			window.registerTreeDataProvider('checkpointsTreeView', this.treeView),
 			workspace.registerTextDocumentContentProvider('checkpointsDocumentView', this.documentView),
 		);
 
@@ -84,33 +83,6 @@ export class CheckpointsController {
 			}),
 			commands.registerCommand('checkpoints.deselectCheckpoint', (checkpointNode) => {
 				this.model.clearSelectionFromFile(checkpointNode.parentId);
-			}),
-			commands.registerCommand('checkpoints.toggleTreeView', () => {
-
-				let options = [
-					{ label: 'File explorer', config: 'showCheckpointsInExplorer' }, 
-					{ label: 'Source control', config: 'showCheckpointsInScm' }
-				];
-				window.showQuickPick(options.map(option => option.label))
-					.then(selection => {
-						if (selection == undefined) {
-							return;
-						}
-
-						let optionToToggle = options.find(option => option.label == selection);
-
-						let config = workspace.getConfiguration('checkpoints');
-						let currentConfigValue = config.get(optionToToggle.config); 
-						config.update(optionToToggle.config, !currentConfigValue)
-							.then(
-							() => {
-								window.setStatusBarMessage(`Set ${optionToToggle.config} config to '${!currentConfigValue}'`, 5000)
-							},
-							(err) => {
-								console.error(err);
-								window.showErrorMessage("Command 'Toggle Tree View' failed.");
-							})
-					});
 			})
 		);
 

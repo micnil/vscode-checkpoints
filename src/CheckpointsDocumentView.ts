@@ -30,7 +30,6 @@ export class CheckpointsDocumentView implements TextDocumentContentProvider {
 				if (isCheckpoint(updatedItem)){
 					this._onDidChange.fire(this.getCheckpointUri(updatedItem));
 				} else if (isFile(updatedItem)) {
-					// TODO: Throws when selecting checkpoints<??
 					this._onDidChange.fire(Uri.parse(updatedItem.id));
 				}
 			}),
