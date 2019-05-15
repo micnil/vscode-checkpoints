@@ -449,13 +449,9 @@ export class CheckpointsModel {
 	 */
 	private updateWorkspaceState(checkpointStore: ICheckpointStore) {
 		this.context.workspaceState.update("checkpointsStore", checkpointStore)
-			.then( success => {
-				
-				if(!success){
-					console.error("Failed to update storage. Will not persist the session!")
+			.then(() => {}, reason => {
+					console.error(`Failed to update storage. Will not persist the session: ${reason}`)
 					window.showWarningMessage("Failed to update the checkpoint store to workspace storage.");
-					return;
-				}
 			}
 		);
 	}
