@@ -4,6 +4,7 @@
     "description": "Checkpoints used in between commits for keeping a local short-term history of work in progress files, like bookmarks in you undo-stack.",
     "version": "1.2.0",
     "publisher": "micnil",
+    "license": "MIT",
     "engines": {
         "vscode": "^1.19.0"
     },
@@ -32,7 +33,7 @@
     ],
     "activationEvents": [
         "onCommand:checkpoints.addCheckpoint",
-        "onView:checkpointsTreeViewExplorer",	
+        "onView:checkpointsTreeViewExplorer",
         "onView:checkpointsTreeViewScm"
     ],
     "main": "./out/extension",
@@ -307,9 +308,9 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^3.4.5",
-        "vscode": "^1.1.34",
-        "@types/node": "^12.0.0",
-        "@types/mocha": "^5.2.6"
+        "@types/mocha": "^7.0.1",
+        "@types/node": "^13.7.7",
+        "typescript": "^3.8.3",
+        "vscode": "^1.1.36"
     }
 }
