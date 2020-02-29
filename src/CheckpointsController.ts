@@ -51,7 +51,8 @@ export class CheckpointsController {
 		);
 
 		this.context.subscriptions.push(
-			window.registerTreeDataProvider('checkpointsTreeView', this.treeView),
+			window.registerTreeDataProvider('checkpointsTreeViewExplorer', this.treeView),
+			window.registerTreeDataProvider('checkpointsTreeViewScm', this.treeView),
 			workspace.registerTextDocumentContentProvider('checkpointsDocumentView', this.documentView),
 		);
 
