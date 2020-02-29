@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.2.1
+## 1.3.0
 - Fix bug [Checkpoint keep showing in SCM #12](https://github.com/micnil/vscode-checkpoints/issues/12)
 
 ## 1.2.0
