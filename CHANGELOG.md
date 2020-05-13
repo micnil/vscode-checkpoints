@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.3.1
+- Remove the MacOS specific keybinding to avoid collision with default "Save all" keybinding
+
 ## 1.3.0
 - Fix bug [Checkpoint keep showing in SCM #12](https://github.com/micnil/vscode-checkpoints/issues/12)
 
