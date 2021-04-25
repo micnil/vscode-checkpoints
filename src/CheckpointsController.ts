@@ -104,7 +104,7 @@ export class CheckpointsController {
 	 * the checkpoint model.
 	*/
 	private async onAddCheckpoint() {
-
+		this.activeEditor = window.activeTextEditor;
 		if (this.activeEditor.document.uri.scheme === "untitled") {
 			console.log(`Failed to add file to store. Unsaved documents are currently not supported`);
 			window.showInformationMessage("Untitled documents are currently not supported");
