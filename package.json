@@ -267,6 +267,11 @@
                     "default": "en-GB",
                     "description": "Specifies the date-time locale used for the default checkpoint names. Available options: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString"
                 },
+                "checkpoints.addCheckpointOnSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Determines wheter to create a new checkpoint when the file is saved"
+                },
                 "checkpoints.askForCheckpointName": {
                     "type": "boolean",
                     "default": true,
