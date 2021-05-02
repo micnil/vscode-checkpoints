@@ -270,7 +270,7 @@
                 "checkpoints.addCheckpointOnSave": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Determines wheter to create a new checkpoint when the file is saved"
+                    "description": "Determines whether to create a new checkpoint when the file is saved"
                 },
                 "checkpoints.askForCheckpointName": {
                     "type": "boolean",

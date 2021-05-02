@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.3.2
+- Add setting addCheckpointOnSave to create checkpoint when a file is saved. Disabled by default.
+
 ## 1.3.1
 - Remove the MacOS specific keybinding to avoid collision with default "Save all" keybinding
 

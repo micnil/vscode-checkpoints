@@ -14,7 +14,6 @@ import {
 import { CheckpointsModel, ICheckpoint } from './CheckpointsModel';
 import { CheckpointsTreeView, CheckpointNode } from './CheckpointsTreeView';
 import { CheckpointsDocumentView } from './CheckpointsDocumentView';
-import * as path from 'path';
 
 export class CheckpointsController {
 	private activeEditor: TextEditor;
