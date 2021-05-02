@@ -54,6 +54,7 @@ export class CheckpointsController {
 			window.registerTreeDataProvider('checkpointsTreeViewExplorer', this.treeView),
 			window.registerTreeDataProvider('checkpointsTreeViewScm', this.treeView),
 			workspace.registerTextDocumentContentProvider('checkpointsDocumentView', this.documentView),
+			workspace.onDidSaveTextDocument(this.handleOnSave, this)
 		);
 
 		// Register commands
@@ -354,5 +355,13 @@ export class CheckpointsController {
 					cb();
 				}
 			});
+	}
+
+	private handleOnSave() {
+		const config = workspace.getConfiguration('checkpoints');        
+		const addCheckpointOnSave: boolean = config.get('addCheckpointOnSave');
+		if (addCheckpointOnSave === true) {
+			commands.executeCommand('checkpoints.addCheckpoint');
+		}
 	}
 }

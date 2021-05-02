@@ -25,19 +25,6 @@ export function activate(context: ExtensionContext) {
 		checkpointsTreeView,
 		checkpointsDocumentView,
     );
-
-    workspace.onDidSaveTextDocument((document: TextDocument) => {
-        const config = workspace.getConfiguration('checkpoints');        
-		const addCheckpointOnSave: boolean = config.get('addCheckpointOnSave');
-        if (addCheckpointOnSave === true) {
-            commands.executeCommand("checkpoints.addCheckpoint").then((edit: WorkspaceEdit) => {
-                if (!edit) throw Error;
-                return workspace.applyEdit(edit);
-            }) .then(undefined, err => {
-               console.error('Failed to add checkpoint on document save', err);
-            });
-        }
-	});
     
     checkpointsController.initialize();
 }
