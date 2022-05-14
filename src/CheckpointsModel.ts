@@ -2,6 +2,7 @@
 
 import { TextDocument, EventEmitter, Event, ExtensionContext, workspace, window, Uri } from 'vscode';
 import * as path from 'path';
+import { Maybe } from './types/Maybe';
 
 export interface ICheckpoint {
 
@@ -135,7 +136,7 @@ export class CheckpointsModel {
 
 	// Fields
 	private checkpointStore: ICheckpointStore;
-	private currentCheckpointContext: Uri;
+	private currentCheckpointContext: Maybe<Uri>;
 	private context: ExtensionContext;
 	private readonly maxLengthFileName: 15; 
 
@@ -150,15 +151,15 @@ export class CheckpointsModel {
 	 * Sets a new checkpoint context you want the tree view to operate on.
 	 * @param fileUri The file's uri
 	 */
-	set checkpointContext(fileUri: Uri) {
+	set checkpointContext(fileUri: Maybe<Uri>) {
 
 		// If this uri is already set, or if the new uri 
 		// is the custom diff view (CheckPointsDocumentView), 
 		// then return. We do not want to update the tree view in 
 		// these cases because we loose selection marker unnecessarily.
 		if (this.currentCheckpointContext && 
-			(this.currentCheckpointContext.toString() === fileUri.toString() ||
-			fileUri.scheme === 'checkpointsDocumentView')) {
+			(this.currentCheckpointContext.toString() === fileUri?.toString() ||
+			fileUri?.scheme === 'checkpointsDocumentView')) {
 			return;
 		}
 
@@ -170,7 +171,7 @@ export class CheckpointsModel {
 	/**
 	 * gets the checkpoint context the tree view should operate on (current open file)
 	 */
-	get checkpointContext(): Uri {
+	get checkpointContext():Maybe<Uri> {
 		return this.currentCheckpointContext;
 	}
 
@@ -247,7 +248,7 @@ export class CheckpointsModel {
 	 */
 	remove(id?: string): void {
 		console.log("Removing checkpoint(s)");
-		let removedItem: ICheckpoint | IFile | ICheckpointStore;
+		let removedItem: Maybe<ICheckpoint | IFile | ICheckpointStore>;
 
 		// Labeled block that exits as soon as we removed the item.
 		itemRemoved: {
@@ -301,7 +302,7 @@ export class CheckpointsModel {
 		}
 
 		// Get the checkpoints by their ID
-		let checkpoints = [];
+		let checkpoints: ICheckpoint[] = [];
 		for (let checkpointId of checkpointsIds) {
 			checkpoints.push(this.getCheckpoint(checkpointId));
 		}
@@ -378,7 +379,7 @@ export class CheckpointsModel {
 	 * Deletes a checkpoint from the model.
 	 * @param id The id of the checkpoint
 	 */
-	private deleteCheckpoint(id: string) : ICheckpoint {
+	private deleteCheckpoint(id: string): Maybe<ICheckpoint> {
 		console.log(`deleting checkpoint with id  '${id}'`);
 
 		// get the checkpoint
@@ -426,7 +427,7 @@ export class CheckpointsModel {
 	 * Deletes all checkpoint that belongs to the a specific file
 	 * @param id The file id
 	 */
-	private clearFile(id: string) : IFile {
+	private clearFile(id: string) : Maybe<IFile> {
 		console.log(`clearing checkpoints from file with id: '${id}'`);
 
 		let file = this.getFile(id);
