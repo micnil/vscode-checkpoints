@@ -1,5 +1,8 @@
 # Change Log
 
+## 1.3.3
+- Fix bug [Diff w Current does not work...](https://github.com/micnil/vscode-checkpoints/issues/22)
+
 ## 1.3.2
 - Add setting addCheckpointOnSave to create checkpoint when a file is saved. Disabled by default.
 
